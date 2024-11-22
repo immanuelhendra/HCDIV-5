@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Heatmap</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        .cell {
+            stroke: #fff;
+        }
+        .axis text {
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        // Define dimensions
+        const margin = {top: 50, right: 30, bottom: 50, left: 100};
+        const width = 600 - margin.left - margin.right;
+        const height = 600 - margin.top - margin.bottom;
+
+        // Create SVG container
+        const svg = d3.select("body")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // Load the data
+        d3.csv("data.csv").then(data => {
+            // Extract unique students
+            const students1 = [...new Set(data.map(d => d["Student 1"]))];
+            const students2 = [...new Set(data.map(d => d["Student 2"]))];
+
+            // Create scales
+            const xScale = d3.scaleBand()
+                .domain(students1)
+                .range([0, width])
+                .padding(0.05);
+
+            const yScale = d3.scaleBand()
+                .domain(students2)
+                .range([0, height])
+                .padding(0.05);
+
+            const colorScale = d3.scaleSequential(d3.interpolateBlues)
+                .domain([d3.min(data, d => +d.Average_Grade), d3.max(data, d => +d.Average_Grade)]);
+
+            // Draw axes
+            svg.append("g")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(xScale));
+
+            svg.append("g")
+                .call(d3.axisLeft(yScale));
+
+            // Draw heatmap cells
+            svg.selectAll()
+                .data(data)
+                .enter()
+                .append("rect")
+                .attr("x", d => xScale(d["Student 1"]))
+                .attr("y", d => yScale(d["Student 2"]))
+                .attr("width", xScale.bandwidth())
+                .attr("height", yScale.bandwidth())
+                .style("fill", d => colorScale(+d.Average_Grade))
+                .classed("cell", true);
+
+            // Add text
+            svg.selectAll()
+                .data(data)
+                .enter()
+                .append("text")
+                .attr("x", d => xScale(d["Student 1"]) + xScale.bandwidth() / 2)
+                .attr("y", d => yScale(d["Student 2"]) + yScale.bandwidth() / 2)
+                .attr("dy", "0.35em")
+                .text(d => +d.Average_Grade)
+                .style("text-anchor", "middle")
+                .style("fill", "#000");
+        });
+    </script>
+</body>
+</html>
