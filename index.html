@@ -45,12 +45,14 @@
             const colorScale = d3.scaleSequential(d3.interpolateYlGnBu)
                 .domain([d3.min(data, d => +d.Average_Grade), d3.max(data, d => +d.Average_Grade)]);
 
+            // Add x-axis
             svg.append("g")
                 .attr("transform", `translate(0,${height})`)
                 .call(d3.axisBottom(xScale))
                 .selectAll("text")
                 .style("text-anchor", "middle");
 
+            // Add y-axis
             svg.append("g")
                 .call(d3.axisLeft(yScale));
 
@@ -59,6 +61,7 @@
                 .enter()
                 .append("g");
 
+            // Add heatmap cells
             cells.append("rect")
                 .attr("x", d => xScale(d["Student 1"]))
                 .attr("y", d => yScale(d["Student 2"]))
@@ -67,13 +70,56 @@
                 .style("fill", d => (+d.Average_Grade > 0 ? colorScale(+d.Average_Grade) : "#ccc"))
                 .classed("cell", true);
 
-            // Add text to each cell
+            // Add text (average grade) to each cell
             cells.append("text")
                 .attr("x", d => xScale(d["Student 1"]) + xScale.bandwidth() / 2)
                 .attr("y", d => yScale(d["Student 2"]) + yScale.bandwidth() / 2)
                 .attr("dy", "0.35em")
                 .attr("text-anchor", "middle")
                 .text(d => (+d.Average_Grade > 0 ? +d.Average_Grade.toFixed(1) : ""));
+
+            // Add legend
+            const legendWidth = 300;
+            const legendHeight = 10;
+
+            const legendSvg = svg.append("g")
+                .attr("transform", `translate(${(width - legendWidth) / 2}, ${-margin.top / 2})`);
+
+            const legendScale = d3.scaleLinear()
+                .domain(colorScale.domain())
+                .range([0, legendWidth]);
+
+            const legendAxis = d3.axisBottom(legendScale)
+                .ticks(5)
+                .tickFormat(d3.format(".1f"));
+
+            // Create gradient for legend
+            const legendGradient = legendSvg.append("defs")
+                .append("linearGradient")
+                .attr("id", "legend-gradient")
+                .attr("x1", "0%")
+                .attr("x2", "100%")
+                .attr("y1", "0%")
+                .attr("y2", "0%");
+
+            legendGradient.append("stop")
+                .attr("offset", "0%")
+                .attr("stop-color", colorScale(colorScale.domain()[0]));
+
+            legendGradient.append("stop")
+                .attr("offset", "100%")
+                .attr("stop-color", colorScale(colorScale.domain()[1]));
+
+            // Draw legend rectangle
+            legendSvg.append("rect")
+                .attr("width", legendWidth)
+                .attr("height", legendHeight)
+                .style("fill", "url(#legend-gradient)");
+
+            // Draw legend axis
+            legendSvg.append("g")
+                .attr("transform", `translate(0, ${legendHeight})`)
+                .call(legendAxis);
         });
     </script>
 </body>
