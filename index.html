@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Heatmap</title>
+    <title>Heatmap with Improved Legend</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         .cell {
@@ -112,14 +112,27 @@
                 .style("fill", "#000")
                 .style("font-size", "12px");  // Keep font size of grades constant
 
-            // Create the horizontal legend (continuous color spectrum with ticks)
-            const legendWidth = width - 50;
+            // Create the legend
+            const legendWidth = 500;
             const legendHeight = 20;
 
             const legend = svg.append("g")
                 .attr("transform", `translate(0, ${height + 30})`);  // Position the legend below the heatmap
 
-            // Create a linear gradient for the color scale
+            // Create the color scale for the legend
+            const legendScale = d3.scaleLinear()
+                .domain([d3.min(data, d => +d.Average_Grade), d3.max(data, d => +d.Average_Grade)])
+                .range([0, legendWidth]);
+
+            // Add the gradient rectangle for the legend
+            legend.append("rect")
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("width", legendWidth)
+                .attr("height", legendHeight)
+                .style("fill", "url(#gradient)");
+
+            // Add the color gradient
             const gradient = svg.append("defs")
                 .append("linearGradient")
                 .attr("id", "gradient")
@@ -129,19 +142,11 @@
                 .attr("y2", "0%");
 
             gradient.selectAll("stop")
-                .data(colorScale.ticks(10))  // Divide the range into 10 ticks
+                .data(colorScale.ticks(10))  // Define the ticks for the gradient
                 .enter()
                 .append("stop")
                 .attr("offset", d => `${(colorScale(d) * 100)}%`)
                 .attr("stop-color", d => colorScale(d));
-
-            // Create a rectangle for the continuous color spectrum
-            legend.append("rect")
-                .attr("x", 0)
-                .attr("y", 0)
-                .attr("width", legendWidth)
-                .attr("height", legendHeight)
-                .style("fill", "url(#gradient)");  // Use the gradient definition
 
             // Add ticks (lines) along the gradient
             const ticks = colorScale.ticks(10);  // Define how many ticks you want
