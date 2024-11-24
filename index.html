@@ -8,16 +8,6 @@
         .cell {
             stroke: #fff;
         }
-        .tooltip {
-            position: absolute;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: #fff;
-            padding: 5px;
-            border-radius: 5px;
-            pointer-events: none;
-            font-size: 12px;
-            opacity: 0;
-        }
         text {
             font-size: 12px;
             fill: #000;
@@ -25,9 +15,8 @@
     </style>
 </head>
 <body>
-    <div class="tooltip"></div>
     <script>
-        const margin = {top: 50, right: 30, bottom: 150, left: 150}; // Increased bottom and left margins for readability
+        const margin = {top: 50, right: 30, bottom: 150, left: 150};
         const cellSize = 50; // Define cell size
         const width = cellSize * 16; // Adjust width based on the number of x-axis elements
         const height = cellSize * 16; // Adjust height based on the number of y-axis elements
@@ -39,8 +28,6 @@
             .append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
-        const tooltip = d3.select(".tooltip");
-
         d3.csv("data.csv").then(data => {
             const students1 = [...new Set(data.map(d => d["Student 1"]))].sort().reverse(); // Reverse order for x-axis
             const students2 = [...new Set(data.map(d => d["Student 2"]))].sort();
@@ -48,12 +35,12 @@
             const xScale = d3.scaleBand()
                 .domain(students1)
                 .range([0, width])
-                .padding(0.1); // Increase padding to create more spacing
+                .padding(0.1);
 
             const yScale = d3.scaleBand()
                 .domain(students2)
                 .range([0, height])
-                .padding(0.1); // Ensure equal spacing on the y-axis
+                .padding(0.1);
 
             const colorScale = d3.scaleSequential(d3.interpolateYlGnBu)
                 .domain([d3.min(data, d => +d.Average_Grade), d3.max(data, d => +d.Average_Grade)]);
@@ -62,79 +49,31 @@
                 .attr("transform", `translate(0,${height})`)
                 .call(d3.axisBottom(xScale))
                 .selectAll("text")
-                .style("text-anchor", "middle"); // Centered x-axis labels
+                .style("text-anchor", "middle");
 
             svg.append("g")
                 .call(d3.axisLeft(yScale));
 
-            svg.selectAll(".cell")
+            const cells = svg.selectAll(".cell")
                 .data(data)
                 .enter()
-                .append("rect")
+                .append("g");
+
+            cells.append("rect")
                 .attr("x", d => xScale(d["Student 1"]))
                 .attr("y", d => yScale(d["Student 2"]))
                 .attr("width", xScale.bandwidth())
                 .attr("height", yScale.bandwidth())
                 .style("fill", d => (+d.Average_Grade > 0 ? colorScale(+d.Average_Grade) : "#ccc"))
-                .classed("cell", true)
-                .on("mouseover", (event, d) => {
-                    if (+d.Average_Grade > 0) {
-                        tooltip.style("opacity", 1)
-                            .html(`
-                                <strong>Student 1:</strong> ${d["Student 1"]}<br>
-                                <strong>Student 2:</strong> ${d["Student 2"]}<br>
-                                <strong>Average Grade:</strong> ${+d.Average_Grade.toFixed(1)}
-                            `)
-                            .style("left", `${event.pageX + 10}px`)
-                            .style("top", `${event.pageY - 20}px`);
-                    }
-                })
-                .on("mousemove", event => {
-                    tooltip.style("left", `${event.pageX + 10}px`)
-                        .style("top", `${event.pageY - 20}px`);
-                })
-                .on("mouseout", () => {
-                    tooltip.style("opacity", 0);
-                });
+                .classed("cell", true);
 
-            const legendWidth = 300;
-            const legendHeight = 10;
-
-            const legendSvg = svg.append("g")
-                .attr("transform", `translate(${(width - legendWidth) / 2}, ${-margin.top / 2})`);
-
-            const legendScale = d3.scaleLinear()
-                .domain(colorScale.domain())
-                .range([0, legendWidth]);
-
-            const legendAxis = d3.axisBottom(legendScale)
-                .ticks(5)
-                .tickFormat(d3.format(".1f"));
-
-            const legendGradient = legendSvg.append("defs")
-                .append("linearGradient")
-                .attr("id", "legend-gradient")
-                .attr("x1", "0%")
-                .attr("x2", "100%")
-                .attr("y1", "0%")
-                .attr("y2", "0%");
-
-            legendGradient.append("stop")
-                .attr("offset", "0%")
-                .attr("stop-color", colorScale(colorScale.domain()[0]));
-
-            legendGradient.append("stop")
-                .attr("offset", "100%")
-                .attr("stop-color", colorScale(colorScale.domain()[1]));
-
-            legendSvg.append("rect")
-                .attr("width", legendWidth)
-                .attr("height", legendHeight)
-                .style("fill", "url(#legend-gradient)");
-
-            legendSvg.append("g")
-                .attr("transform", `translate(0, ${legendHeight})`)
-                .call(legendAxis);
+            // Add text to each cell
+            cells.append("text")
+                .attr("x", d => xScale(d["Student 1"]) + xScale.bandwidth() / 2)
+                .attr("y", d => yScale(d["Student 2"]) + yScale.bandwidth() / 2)
+                .attr("dy", "0.35em")
+                .attr("text-anchor", "middle")
+                .text(d => (+d.Average_Grade > 0 ? +d.Average_Grade.toFixed(1) : ""));
         });
     </script>
 </body>
