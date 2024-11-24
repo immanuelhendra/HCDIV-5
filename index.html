@@ -18,8 +18,8 @@
     <script>
         // Define dimensions
         const margin = {top: 50, right: 30, bottom: 80, left: 100};  // Increased bottom margin for more space
-        const width = 800 - margin.left - margin.right;  // Increased width for more space
-        const height = 600 - margin.top - margin.bottom;  // Adjust height if needed
+        const width = 800 - margin.left - margin.right;  // Width for the chart
+        const height = 800 - margin.top - margin.bottom;  // Height should be the same as width for square cells
 
         // Create SVG container
         const svg = d3.select("body")
@@ -46,17 +46,21 @@
             // Use the same domain for both x and y axis (ensuring they match)
             const studentDomain = students1; // Or students2 since they are the same now
 
-            // Create scales
+            // Create scales with equal size for both axes to make square cells
             const xScale = d3.scaleBand()
                 .domain(studentDomain)
                 .range([0, width])  // This will increase the space between cells
-                .padding(0.1);  // Optional: adjust for space between cells (but this also increases space between axis labels)
+                .padding(0.1);  // Adjust padding to control space between cells
 
             const yScale = d3.scaleBand()
                 .domain(studentDomain)  // Same domain as x-axis to ensure symmetry
-                .range([0, height])  // This will increase the space between cells
-                .padding(0.1)  // Optional: adjust for space between cells (but this also increases space between axis labels)
-                .reverse();  // Reversed to make INTP appear at the bottom
+                .range([height, 0])  // Reversed range so that the bottom is the largest value
+                .padding(0.1);  // Adjust padding to control space between cells
+
+            // Ensure square cells by adjusting the range of the scales dynamically
+            const cellSize = Math.min(width, height) / studentDomain.length;  // Calculate cell size based on the available space
+            xScale.range([0, cellSize * studentDomain.length]);
+            yScale.range([cellSize * studentDomain.length, 0]);  // Reversed range for y-axis
 
             const colorScale = d3.scaleSequential(d3.interpolateRdYlGn)
                 .domain([d3.min(data, d => +d.Average_Grade), d3.max(data, d => +d.Average_Grade)]);
@@ -79,7 +83,7 @@
                 .enter()
                 .append("rect")
                 .attr("x", d => xScale(d["Student 1"]))
-                .attr("y", d => yScale(d["Student 2"]))
+                .attr("y", d => yScale(d["Student 2"]))  // yScale is reversed, so this is the correct placement
                 .attr("width", xScale.bandwidth())  // Adjust width of cells (squares)
                 .attr("height", yScale.bandwidth())  // Adjust height of cells (squares)
                 .style("fill", d => colorScale(+d.Average_Grade))
