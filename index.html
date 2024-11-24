@@ -10,7 +10,7 @@
             stroke: #fff;
         }
         .axis text {
-            font-size: 16px;  /* Increased font size for axis labels */
+            font-size: 12px;  /* Set font size of axis labels */
         }
     </style>
 </head>
@@ -31,6 +31,14 @@
 
         // Load the data
         d3.csv("data.csv").then(data => {
+            console.log(data);  // Log the data to check if it's loaded correctly
+
+            // Ensure there are data points
+            if (data.length === 0) {
+                console.error("No data found in the CSV file!");
+                return;
+            }
+
             // Extract unique students from both "Student 1" and "Student 2"
             const students1 = [...new Set(data.map(d => d["Student 1"]))];
             const students2 = [...new Set(data.map(d => d["Student 2"]))];
@@ -47,7 +55,8 @@
             const yScale = d3.scaleBand()
                 .domain(studentDomain)  // Same domain as x-axis to ensure symmetry
                 .range([0, height])  // This will increase the space between cells
-                .padding(0.1);  // Optional: adjust for space between cells (but this also increases space between axis labels)
+                .padding(0.1)  // Optional: adjust for space between cells (but this also increases space between axis labels)
+                .reverse();  // Reverse the y-axis order to match the desired order
 
             const colorScale = d3.scaleSequential(d3.interpolateRdYlGn)
                 .domain([d3.min(data, d => +d.Average_Grade), d3.max(data, d => +d.Average_Grade)]);
@@ -57,12 +66,12 @@
                 .attr("transform", `translate(0,${height})`)
                 .call(d3.axisBottom(xScale))
                 .selectAll("text")
-                .style("font-size", "16px");  // Increased font size of axis labels
+                .style("font-size", "12px");  // Apply font size of 12px to x-axis labels
 
             svg.append("g")
                 .call(d3.axisLeft(yScale))
                 .selectAll("text")
-                .style("font-size", "16px");  // Increased font size of axis labels
+                .style("font-size", "12px");  // Apply font size of 12px to y-axis labels
 
             // Draw heatmap cells
             svg.selectAll()
@@ -88,6 +97,8 @@
                 .style("text-anchor", "middle")
                 .style("fill", "#000")
                 .style("font-size", "12px");  // Keep font size of grades constant
+        }).catch(error => {
+            console.error("Error loading CSV data: ", error);
         });
     </script>
 </body>
