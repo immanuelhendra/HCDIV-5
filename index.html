@@ -10,7 +10,7 @@
             stroke: #fff;
         }
         .axis text {
-            font-size: 16px;  /* Increased font size for axis labels */
+            font-size: 12px;  /* Set font size of axis labels to 12px */
         }
     </style>
 </head>
@@ -58,12 +58,12 @@
                 .attr("transform", `translate(0,${height})`)
                 .call(d3.axisBottom(xScale))
                 .selectAll("text")
-                .style("font-size", "12px");  // Increased font size of axis labels
+                .style("font-size", "12px");  // Apply font size of 12px to x-axis labels
 
             svg.append("g")
                 .call(d3.axisLeft(yScale))
                 .selectAll("text")
-                .style("font-size", "12px");  // Increased font size of axis labels
+                .style("font-size", "12px");  // Apply font size of 12px to y-axis labels
 
             // Draw heatmap cells
             svg.selectAll()
@@ -85,11 +85,4 @@
                 .attr("x", d => xScale(d["Student 1"]) + xScale.bandwidth() / 2)
                 .attr("y", d => yScale(d["Student 2"]) + yScale.bandwidth() / 2)
                 .attr("dy", "0.35em")
-                .text(d => +d.Average_Grade)
-                .style("text-anchor", "middle")
-                .style("fill", "#000")
-                .style("font-size", "12px");  // Keep font size of grades constant
-        });
-    </script>
-</body>
-</html>
+                .text(d 
