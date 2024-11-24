@@ -106,9 +106,9 @@
                 row.forEach((value, j) => {
                     const cell = heatmapContainer.append("div")
                         .attr("class", "cell")
-                        .style("background-color", value === null ? "white" : d3.interpolateYlGnBu(value / 100)) // Use white for no data, else apply color scale
-                        .style("color", value === null ? "black" : "white") // Ensure text color is readable
-                        .text(value && value > 0 ? value.toFixed(1) : "");
+                        .style("background-color", value === null || value === 0 ? "white" : d3.interpolateYlGnBu(value / 100)) // Use white for no data or zero values
+                        .style("color", value === null || value === 0 ? "black" : "white") // Ensure text color is readable for non-zero values
+                        .text(value && value > 0 ? value.toFixed(1) : ""); // Display value if greater than 0, otherwise leave it empty
 
                     // Add interaction for each cell (optional)
                     cell.on("click", function() {
