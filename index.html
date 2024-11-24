@@ -35,11 +35,11 @@
             const xScale = d3.scaleBand()
                 .domain(students1)
                 .range([0, width])
-                .padding(0.05);
+                .padding(0.1);
             const yScale = d3.scaleBand()
                 .domain(students2)
                 .range([0, height])
-                .padding(0.05);
+                .padding(0.1);
             const colorScale = d3.scaleSequential(d3.interpolateRdYIGn)
                 .domain([d3.min(data, d => +d.Average_Grade), d3.max(data, d => +d.Average_Grade)]);
             // Draw axes
