@@ -2,127 +2,74 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>HCDIV Assignment-5</title>
+    <title>Heatmap</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         .cell {
             stroke: #fff;
         }
-        text {
+        .axis text {
             font-size: 12px;
-            fill: #000;
-        }
-        .legend text {
-            font-size: 10px;
         }
     </style>
 </head>
 <body>
     <script>
-        const margin = {top: 50, right: 30, bottom: 150, left: 150};
-        const cellSize = 50; // Define cell size
-        const width = cellSize * 16; // Adjust width based on the number of x-axis elements
-        const height = cellSize * 16; // Adjust height based on the number of y-axis elements
-
+        // Define dimensions
+        const margin = {top: 50, right: 30, bottom: 50, left: 100};
+        const width = 600 - margin.left - margin.right;
+        const height = 600 - margin.top - margin.bottom;
+        // Create SVG container
         const svg = d3.select("body")
             .append("svg")
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
             .append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
-
+        // Load the data
         d3.csv("data.csv").then(data => {
-            const students1 = [...new Set(data.map(d => d["Student 1"]))].sort().reverse(); // Reverse order for x-axis
-            const students2 = [...new Set(data.map(d => d["Student 2"]))].sort();
-
+            // Extract unique students
+            const students1 = [...new Set(data.map(d => d["Student 1"]))];
+            const students2 = [...new Set(data.map(d => d["Student 2"]))];
+            // Create scales
             const xScale = d3.scaleBand()
                 .domain(students1)
                 .range([0, width])
-                .padding(0.1);
-
+                .padding(0.05);
             const yScale = d3.scaleBand()
                 .domain(students2)
                 .range([0, height])
-                .padding(0.1);
-
-            const colorScale = d3.scaleSequential(d3.interpolateYlGnBu)
+                .padding(0.05);
+            const colorScale = d3.scaleSequential(d3.interpolateBrBG)
                 .domain([d3.min(data, d => +d.Average_Grade), d3.max(data, d => +d.Average_Grade)]);
-
-            // Add x-axis
+            // Draw axes
             svg.append("g")
                 .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(xScale))
-                .selectAll("text")
-                .style("text-anchor", "middle");
-
-            // Add y-axis
+                .call(d3.axisBottom(xScale));
             svg.append("g")
                 .call(d3.axisLeft(yScale));
-
-            const cells = svg.selectAll(".cell")
+            // Draw heatmap cells
+            svg.selectAll()
                 .data(data)
                 .enter()
-                .append("g");
-
-            // Add heatmap cells
-            cells.append("rect")
+                .append("rect")
                 .attr("x", d => xScale(d["Student 1"]))
                 .attr("y", d => yScale(d["Student 2"]))
                 .attr("width", xScale.bandwidth())
                 .attr("height", yScale.bandwidth())
-                .style("fill", d => (+d.Average_Grade > 0 ? colorScale(+d.Average_Grade) : "#ccc"))
+                .style("fill", d => colorScale(+d.Average_Grade))
                 .classed("cell", true);
-
-            // Add text (average grade) to each cell
-            cells.append("text")
+            // Add text
+            svg.selectAll()
+                .data(data)
+                .enter()
+                .append("text")
                 .attr("x", d => xScale(d["Student 1"]) + xScale.bandwidth() / 2)
                 .attr("y", d => yScale(d["Student 2"]) + yScale.bandwidth() / 2)
                 .attr("dy", "0.35em")
-                .attr("text-anchor", "middle")
-                .text(d => (+d.Average_Grade > 0 ? +d.Average_Grade.toFixed(1) : ""));
-
-            // Add legend
-            const legendWidth = 300;
-            const legendHeight = 10;
-
-            const legendSvg = svg.append("g")
-                .attr("transform", `translate(${(width - legendWidth) / 2}, ${-margin.top / 2})`);
-
-            const legendScale = d3.scaleLinear()
-                .domain(colorScale.domain())
-                .range([0, legendWidth]);
-
-            const legendAxis = d3.axisBottom(legendScale)
-                .ticks(5)
-                .tickFormat(d3.format(".1f"));
-
-            // Create gradient for legend
-            const legendGradient = legendSvg.append("defs")
-                .append("linearGradient")
-                .attr("id", "legend-gradient")
-                .attr("x1", "0%")
-                .attr("x2", "100%")
-                .attr("y1", "0%")
-                .attr("y2", "0%");
-
-            legendGradient.append("stop")
-                .attr("offset", "0%")
-                .attr("stop-color", colorScale(colorScale.domain()[0]));
-
-            legendGradient.append("stop")
-                .attr("offset", "100%")
-                .attr("stop-color", colorScale(colorScale.domain()[1]));
-
-            // Draw legend rectangle
-            legendSvg.append("rect")
-                .attr("width", legendWidth)
-                .attr("height", legendHeight)
-                .style("fill", "url(#legend-gradient)");
-
-            // Draw legend axis
-            legendSvg.append("g")
-                .attr("transform", `translate(0, ${legendHeight})`)
-                .call(legendAxis);
+                .text(d => +d.Average_Grade)
+                .style("text-anchor", "middle")
+                .style("fill", "#000");
         });
     </script>
 </body>
