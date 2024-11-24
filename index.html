@@ -6,12 +6,19 @@
     <title>Student Pair Heatmap</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .heatmap-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
         .heatmap {
             display: grid;
-            grid-template-columns: repeat(10, 1fr);
-            grid-template-rows: repeat(10, 1fr);
+            grid-template-columns: repeat(10, 30px);  /* Adjust cell size */
+            grid-template-rows: repeat(10, 30px);     /* Adjust cell size */
             gap: 1px;
-            margin-top: 50px; /* Space for labels */
         }
         .cell {
             width: 30px;
@@ -23,25 +30,37 @@
             align-items: center;
             font-size: 12px;
         }
-        .axis {
+        .axis-container {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             margin-top: 10px;
-            font-size: 14px;
         }
-        .axis div {
+        .x-axis, .y-axis {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1px;
+        }
+        .x-axis div, .y-axis div {
             width: 30px;
             text-align: center;
+            font-size: 12px; /* Adjust axis label size */
+        }
+        .y-axis {
+            position: absolute;
+            left: -40px; /* Positioning y-axis to the left of the grid */
         }
     </style>
 </head>
 <body>
     <h1>Student Pair Heatmap</h1>
 
-    <div id="heatmap-container">
+    <div class="heatmap-container">
         <div id="heatmap" class="heatmap"></div>
-        <div id="x-axis" class="axis"></div>
-        <div id="y-axis" class="axis" style="transform: rotate(-90deg);"></div>
+        <div class="axis-container">
+            <div id="y-axis" class="y-axis"></div>
+            <div id="x-axis" class="x-axis"></div>
+        </div>
     </div>
 
     <script>
