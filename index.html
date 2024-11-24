@@ -27,9 +27,10 @@
 <body>
     <div class="tooltip"></div>
     <script>
-        const margin = {top: 50, right: 30, bottom: 100, left: 100};
-        const width = 600 - margin.left - margin.right;
-        const height = 600 - margin.top - margin.bottom;
+        const margin = {top: 50, right: 30, bottom: 150, left: 150}; // Increased bottom and left margins for readability
+        const cellSize = 50; // Define cell size
+        const width = cellSize * 16; // Adjust width based on the number of x-axis elements
+        const height = cellSize * 16; // Adjust height based on the number of y-axis elements
 
         const svg = d3.select("body")
             .append("svg")
@@ -47,12 +48,12 @@
             const xScale = d3.scaleBand()
                 .domain(students1)
                 .range([0, width])
-                .padding(0.05);
+                .padding(0.1); // Increase padding to create more spacing
 
             const yScale = d3.scaleBand()
                 .domain(students2)
                 .range([0, height])
-                .padding(0.05);
+                .padding(0.1); // Ensure equal spacing on the y-axis
 
             const colorScale = d3.scaleSequential(d3.interpolateYlGnBu)
                 .domain([d3.min(data, d => +d.Average_Grade), d3.max(data, d => +d.Average_Grade)]);
