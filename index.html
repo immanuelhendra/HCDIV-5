@@ -117,7 +117,7 @@
                     const cell = heatmapContainer.append("div")
                         .attr("class", "cell")
                         .style("background-color", value === null ? "white" : colorScale(value)) // Apply the color scale
-                        .style("color", value === null ? "black" : "white") // Ensure text color is readable for non-zero values
+                        .style("color", "black") // Ensure text color is readable for non-zero values
                         .text(value && value > 0 ? value.toFixed(1) : ""); // Display value if greater than 0, otherwise leave it empty
 
                     // Add interaction for each cell (optional)
