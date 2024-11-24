@@ -80,7 +80,10 @@
             // Create the heatmap matrix
             const matrix = Array.from({ length: students.length }, () => Array(students.length).fill(null));
 
-            // Populate the matrix with grades
+            let minValue = Infinity;
+            let maxValue = -Infinity;
+
+            // Populate the matrix with grades and track the min and max values
             data.forEach(row => {
                 const i = studentIndex[row['Student 1']];
                 const j = studentIndex[row['Student 2']];
@@ -90,8 +93,15 @@
                     // If there's already a value, average them; otherwise, set the value
                     matrix[i][j] = matrix[i][j] ? (matrix[i][j] + grade) / 2 : grade;
                     matrix[j][i] = matrix[i][j]; // Symmetry
+                    minValue = Math.min(minValue, grade);
+                    maxValue = Math.max(maxValue, grade);
                 }
             });
+
+            // Create the custom color scale (Red to Green)
+            const colorScale = d3.scaleLinear()
+                .domain([minValue, maxValue]) // Map the data range to the color scale
+                .range(["red", "green"]); // Red for low values, Green for high values
 
             // Create the heatmap grid
             const heatmapContainer = d3.select("#heatmap");
@@ -106,7 +116,7 @@
                 row.forEach((value, j) => {
                     const cell = heatmapContainer.append("div")
                         .attr("class", "cell")
-                        .style("background-color", value === null || value === 0 ? "white" : d3.interpolateYlGnBu(value / 100)) // Use white for no data or zero values
+                        .style("background-color", value === null || value === 0 ? "white" : colorScale(value)) // Apply the custom color scale
                         .style("color", value === null || value === 0 ? "black" : "white") // Ensure text color is readable for non-zero values
                         .text(value && value > 0 ? value.toFixed(1) : ""); // Display value if greater than 0, otherwise leave it empty
 
