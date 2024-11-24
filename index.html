@@ -10,6 +10,8 @@
             display: grid;
             grid-template-columns: repeat(10, 1fr);
             grid-template-rows: repeat(10, 1fr);
+            gap: 1px;
+            margin-top: 50px; /* Space for labels */
         }
         .cell {
             width: 30px;
@@ -21,11 +23,26 @@
             align-items: center;
             font-size: 12px;
         }
+        .axis {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .axis div {
+            width: 30px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <h1>Student Pair Heatmap</h1>
-    <div id="heatmap" class="heatmap"></div>
+
+    <div id="heatmap-container">
+        <div id="heatmap" class="heatmap"></div>
+        <div id="x-axis" class="axis"></div>
+        <div id="y-axis" class="axis" style="transform: rotate(-90deg);"></div>
+    </div>
 
     <script>
         // Load CSV file
@@ -80,10 +97,16 @@
                 });
             });
 
-            // Add labels (if needed)
-            const labelsContainer = d3.select("body").append("div").style("display", "flex").style("flex-wrap", "wrap").style("margin-top", "20px");
+            // Add x-axis labels
+            const xAxisContainer = d3.select("#x-axis");
             students.forEach(student => {
-                labelsContainer.append("div").text(student).style("margin-right", "10px");
+                xAxisContainer.append("div").text(student);
+            });
+
+            // Add y-axis labels
+            const yAxisContainer = d3.select("#y-axis");
+            students.forEach(student => {
+                yAxisContainer.append("div").text(student);
             });
         });
     </script>
