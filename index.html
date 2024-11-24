@@ -87,7 +87,7 @@
                 const j = studentIndex[row['Student 2']];
                 const grade = parseFloat(row['Average_Grade']);
 
-                if (grade > 0) {
+                if (grade > 0) { // Only set non-zero values
                     if (matrix[i][j] !== NaN) {
                         matrix[i][j] = (matrix[i][j] + grade) / 2;
                     } else {
@@ -105,13 +105,18 @@
                 .style("grid-template-columns", `repeat(${students.length}, ${cellSize}px)`)
                 .style("grid-template-rows", `repeat(${students.length}, ${cellSize}px)`);
 
+            // Create color scale (ignoring NaN values)
+            const validGrades = matrix.flat().filter(value => !isNaN(value));
+            const colorScale = d3.scaleSequential(d3.interpolateYlGnBu)
+                .domain([Math.min(...validGrades), Math.max(...validGrades)]);
+
             // Add the cells to the grid
             matrix.forEach((row, i) => {
                 row.forEach((value, j) => {
                     if (!isNaN(value)) {  // Ignore cells with NaN
                         heatmapContainer.append("div")
                             .attr("class", "cell")
-                            .style("background-color", d3.interpolateYlGnBu(value / 100)) // Scale grade to color
+                            .style("background-color", colorScale(value)) // Apply color scale
                             .style("color", "white")
                             .text(value.toFixed(1));
                     } else {
