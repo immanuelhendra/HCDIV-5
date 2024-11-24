@@ -55,7 +55,8 @@
             const yScale = d3.scaleBand()
                 .domain(studentDomain)  // Same domain as x-axis to ensure symmetry
                 .range([0, height])  // This will increase the space between cells
-                .padding(0.1);  // Optional: adjust for space between cells (but this also increases space between axis labels)
+                .padding(0.1)  // Optional: adjust for space between cells (but this also increases space between axis labels)
+                .reverse();  // Reversed to make INTP appear at the bottom
 
             const colorScale = d3.scaleSequential(d3.interpolateRdYlGn)
                 .domain([d3.min(data, d => +d.Average_Grade), d3.max(data, d => +d.Average_Grade)]);
