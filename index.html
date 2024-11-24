@@ -44,9 +44,11 @@
 
         // Load the data
         d3.csv("data.csv").then(data => {
-            // Extract unique students and sort for consistent axis labels
+            // Extract unique students and sort them
             const students = [...new Set(data.map(d => d["Student 1"]))].sort();
-            const reversedStudents = students.slice().reverse(); // Reverse x-axis order
+
+            // Reverse the order of the x-axis (invert)
+            const reversedStudents = students.slice().reverse();
 
             // Create scales
             const xScale = d3.scaleBand()
@@ -65,7 +67,10 @@
             // Draw axes
             svg.append("g")
                 .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(xScale));
+                .call(d3.axisBottom(xScale))
+                .selectAll("text")
+                .style("text-anchor", "end")
+                .attr("transform", "rotate(-45)");
 
             svg.append("g")
                 .call(d3.axisLeft(yScale));
@@ -79,7 +84,7 @@
                 .attr("y", d => yScale(d["Student 2"]))
                 .attr("width", xScale.bandwidth())
                 .attr("height", yScale.bandwidth())
-                .style("fill", d => (+d.Average_Grade > 0 ? colorScale(+d.Average_Grade) : "#ccc"))
+                .style("fill", d => (+d.Average_Grade > 0 ? colorScale(+d.Average_Grade) : "#ccc")) // Gray for missing grades
                 .classed("cell", true)
                 .on("mouseover", (event, d) => {
                     if (+d.Average_Grade > 0) {
