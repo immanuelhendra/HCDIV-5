@@ -8,9 +8,6 @@
         .cell {
             stroke: #fff;
         }
-        .axis text {
-            font-size: 12px;
-        }
         .tooltip {
             position: absolute;
             background-color: rgba(0, 0, 0, 0.7);
@@ -21,19 +18,19 @@
             font-size: 12px;
             opacity: 0;
         }
+        text {
+            font-size: 12px;
+            fill: #000;
+        }
     </style>
 </head>
 <body>
-    <!-- Tooltip for hovering -->
     <div class="tooltip"></div>
-
     <script>
-        // Define dimensions
-        const margin = { top: 50, right: 30, bottom: 100, left: 100 };
+        const margin = {top: 50, right: 30, bottom: 100, left: 100};
         const width = 600 - margin.left - margin.right;
         const height = 600 - margin.top - margin.bottom;
 
-        // Create SVG container
         const svg = d3.select("body")
             .append("svg")
             .attr("width", width + margin.left + margin.right)
@@ -41,16 +38,12 @@
             .append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
-        // Tooltip setup
         const tooltip = d3.select(".tooltip");
 
-        // Load the data
-        d3.csv("2 point correlation to grades.csv").then(data => {
-            // Extract and sort unique students
-            const students1 = [...new Set(data.map(d => d["Student 1"]))].sort().reverse(); // Reverse for x-axis
+        d3.csv("data.csv").then(data => {
+            const students1 = [...new Set(data.map(d => d["Student 1"]))].sort().reverse(); // Reverse order for x-axis
             const students2 = [...new Set(data.map(d => d["Student 2"]))].sort();
 
-            // Create scales
             const xScale = d3.scaleBand()
                 .domain(students1)
                 .range([0, width])
@@ -64,18 +57,15 @@
             const colorScale = d3.scaleSequential(d3.interpolateYlGnBu)
                 .domain([d3.min(data, d => +d.Average_Grade), d3.max(data, d => +d.Average_Grade)]);
 
-            // Draw axes
             svg.append("g")
                 .attr("transform", `translate(0,${height})`)
                 .call(d3.axisBottom(xScale))
                 .selectAll("text")
-                .attr("transform", "rotate(45)")
-                .style("text-anchor", "start");
+                .style("text-anchor", "middle"); // Centered x-axis labels
 
             svg.append("g")
                 .call(d3.axisLeft(yScale));
 
-            // Draw heatmap cells
             svg.selectAll(".cell")
                 .data(data)
                 .enter()
@@ -84,7 +74,7 @@
                 .attr("y", d => yScale(d["Student 2"]))
                 .attr("width", xScale.bandwidth())
                 .attr("height", yScale.bandwidth())
-                .style("fill", d => (+d.Average_Grade > 0 ? colorScale(+d.Average_Grade) : "#ccc")) // Gray for missing grades
+                .style("fill", d => (+d.Average_Grade > 0 ? colorScale(+d.Average_Grade) : "#ccc"))
                 .classed("cell", true)
                 .on("mouseover", (event, d) => {
                     if (+d.Average_Grade > 0) {
@@ -106,7 +96,6 @@
                     tooltip.style("opacity", 0);
                 });
 
-            // Add legend
             const legendWidth = 300;
             const legendHeight = 10;
 
@@ -121,7 +110,6 @@
                 .ticks(5)
                 .tickFormat(d3.format(".1f"));
 
-            // Create gradient for legend
             const legendGradient = legendSvg.append("defs")
                 .append("linearGradient")
                 .attr("id", "legend-gradient")
@@ -138,7 +126,6 @@
                 .attr("offset", "100%")
                 .attr("stop-color", colorScale(colorScale.domain()[1]));
 
-            // Draw legend
             legendSvg.append("rect")
                 .attr("width", legendWidth)
                 .attr("height", legendHeight)
