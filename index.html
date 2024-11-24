@@ -12,12 +12,18 @@
         .axis text {
             font-size: 12px;  /* Set font size of axis labels */
         }
+        .legend rect {
+            height: 20px;
+        }
+        .legend text {
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
     <script>
         // Define dimensions
-        const margin = {top: 50, right: 30, bottom: 80, left: 100};  // Increased bottom margin for more space
+        const margin = {top: 50, right: 30, bottom: 100, left: 100};  // Increased bottom margin for more space
         const width = 800 - margin.left - margin.right;  // Width for the chart
         const height = 800 - margin.top - margin.bottom;  // Height should be the same as width for square cells
 
@@ -101,6 +107,44 @@
                 .style("text-anchor", "middle")
                 .style("fill", "#000")
                 .style("font-size", "12px");  // Keep font size of grades constant
+
+            // Create the horizontal legend
+            const legendWidth = width - 50;
+            const legendHeight = 20;
+
+            const legend = svg.append("g")
+                .attr("transform", `translate(0, ${height + 30})`);  // Position the legend below the heatmap
+
+            // Define the color scale for the legend
+            const legendScale = d3.scaleLinear()
+                .domain([d3.min(data, d => +d.Average_Grade), d3.max(data, d => +d.Average_Grade)])
+                .range([0, legendWidth]);
+
+            // Add the color bars (rectangles) for the legend
+            legend.append("g")
+                .selectAll("rect")
+                .data(d3.range(legendWidth))
+                .enter()
+                .append("rect")
+                .attr("x", d => legendScale(d))
+                .attr("y", 0)
+                .attr("width", legendWidth / 100)
+                .attr("height", legendHeight)
+                .style("fill", d => colorScale(d));
+
+            // Add labels for the legend
+            legend.append("text")
+                .attr("x", 0)
+                .attr("y", legendHeight + 10)
+                .text(d3.min(data, d => +d.Average_Grade))
+                .style("font-size", "12px");
+
+            legend.append("text")
+                .attr("x", legendWidth)
+                .attr("y", legendHeight + 10)
+                .text(d3.max(data, d => +d.Average_Grade))
+                .style("font-size", "12px");
+
         }).catch(error => {
             console.error("Error loading CSV data: ", error);
         });
