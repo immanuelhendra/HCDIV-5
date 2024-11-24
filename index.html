@@ -29,7 +29,7 @@
 
     <script>
         // Define dimensions
-        const margin = {top: 50, right: 30, bottom: 50, left: 100};
+        const margin = { top: 50, right: 30, bottom: 100, left: 100 };
         const width = 600 - margin.left - margin.right;
         const height = 600 - margin.top - margin.bottom;
 
@@ -45,9 +45,9 @@
         const tooltip = d3.select(".tooltip");
 
         // Load the data
-        d3.csv("data.csv").then(data => {
+        d3.csv("2 point correlation to grades.csv").then(data => {
             // Extract and sort unique students
-            const students1 = [...new Set(data.map(d => d["Student 1"]))].sort().reverse(); // Reversed order for x-axis
+            const students1 = [...new Set(data.map(d => d["Student 1"]))].sort().reverse(); // Reverse for x-axis
             const students2 = [...new Set(data.map(d => d["Student 2"]))].sort();
 
             // Create scales
@@ -69,7 +69,7 @@
                 .attr("transform", `translate(0,${height})`)
                 .call(d3.axisBottom(xScale))
                 .selectAll("text")
-                .attr("transform", "rotate(90)")
+                .attr("transform", "rotate(45)")
                 .style("text-anchor", "start");
 
             svg.append("g")
