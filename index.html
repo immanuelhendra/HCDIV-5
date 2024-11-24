@@ -98,10 +98,10 @@
                 }
             });
 
-            // Create the custom color scale (Red to Green)
-            const colorScale = d3.scaleLinear()
-                .domain([minValue, maxValue]) // Map the data range to the color scale
-                .range(["red", "green"]); // Red for low values, Green for high values
+            // Create the diverging color scale (Red to Yellow to Green)
+            const colorScale = d3.scaleSequential()
+                .interpolator(d3.interpolateRdYlGn)
+                .domain([minValue, maxValue]);
 
             // Create the heatmap grid
             const heatmapContainer = d3.select("#heatmap");
@@ -116,7 +116,7 @@
                 row.forEach((value, j) => {
                     const cell = heatmapContainer.append("div")
                         .attr("class", "cell")
-                        .style("background-color", value === null || value === 0 ? "white" : colorScale(value)) // Apply the custom color scale
+                        .style("background-color", value === null || value === 0 ? "white" : colorScale(value)) // Apply the color scale
                         .style("color", value === null || value === 0 ? "black" : "white") // Ensure text color is readable for non-zero values
                         .text(value && value > 0 ? value.toFixed(1) : ""); // Display value if greater than 0, otherwise leave it empty
 
