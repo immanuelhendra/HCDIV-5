@@ -3,130 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Heatmap of Student Pairs</title>
+    <title>Student Pair Heatmap</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
-        .cell {
-            stroke: #fff;
+        .heatmap {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(10, 1fr);
         }
-        .axis text {
+        .cell {
+            width: 30px;
+            height: 30px;
+            text-align: center;
+            vertical-align: middle;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             font-size: 12px;
         }
     </style>
 </head>
 <body>
+    <h1>Student Pair Heatmap</h1>
+    <div id="heatmap" class="heatmap"></div>
+
     <script>
-        // Define dimensions
-        const margin = {top: 50, right: 30, bottom: 150, left: 100};
-        const width = 800 - margin.left - margin.right;
-        const height = 800 - margin.top - margin.bottom;
+        // Load CSV file
+        d3.csv("data.csv").then(function(data) {
+            // Get unique students
+            const students = Array.from(new Set(data.flatMap(d => [d['Student 1'], d['Student 2']])));
+            students.sort();
 
-        // Create SVG container
-        const svg = d3.select("body")
-            .append("svg")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
-            .append("g")
-            .attr("transform", `translate(${margin.left},${margin.top})`);
-
-        // Load the data
-        d3.csv("data.csv").then(data => {
-            console.log(data);  // Log the data to check if it's loaded correctly
-
-            // Extract unique students and sort them
-            const students = Array.from(new Set(data.flatMap(d => [d["Student 1"], d["Student 2"]]))).sort();
-            console.log("Sorted students:", students);
-
-            // Create a mapping for each student to their index in the matrix
+            // Create a mapping for each student to an index
             const studentIndex = students.reduce((acc, student, idx) => {
                 acc[student] = idx;
                 return acc;
             }, {});
 
-            console.log("Student Index Mapping:", studentIndex);
-
-            // Create an empty matrix for the heatmap (symmetric)
-            const heatmapMatrix = Array(students.length).fill().map(() => Array(students.length).fill(0));
+            // Create the heatmap matrix
+            const matrix = Array.from({ length: students.length }, () => Array(students.length).fill(0));
 
             // Populate the matrix with grades
             data.forEach(row => {
-                const student1 = row["Student 1"];
-                const student2 = row["Student 2"];
-                const grade = +row["Average_Grade"];
+                const i = studentIndex[row['Student 1']];
+                const j = studentIndex[row['Student 2']];
+                const grade = parseFloat(row['Average_Grade']);
 
-                // Ensure the pair is ordered (treating (A, B) and (B, A) as the same)
-                const i = studentIndex[Math.min(student1, student2)];
-                const j = studentIndex[Math.max(student1, student2)];
-
-                console.log(`Processing pair: ${student1}, ${student2} (i: ${i}, j: ${j})`);
-
-                // If the value is already set, take the average grade for that pair
-                if (heatmapMatrix[i][j] !== 0) {
-                    heatmapMatrix[i][j] = (heatmapMatrix[i][j] + grade) / 2;
+                if (matrix[i][j] !== 0) {
+                    matrix[i][j] = (matrix[i][j] + grade) / 2;
                 } else {
-                    heatmapMatrix[i][j] = grade;
+                    matrix[i][j] = grade;
                 }
 
-                // Set the symmetric value as well
-                heatmapMatrix[j][i] = heatmapMatrix[i][j];
+                matrix[j][i] = matrix[i][j]; // Symmetry
             });
 
-            // Log the heatmap matrix for debugging
-            console.log("Heatmap Matrix:", heatmapMatrix);
+            // Create the heatmap grid
+            const heatmapContainer = d3.select("#heatmap");
+            const cellSize = 30;
 
-            // Set the color scale
-            const colorScale = d3.scaleSequential(d3.interpolateYlGnBu)
-                .domain([d3.min(heatmapMatrix.flat()), d3.max(heatmapMatrix.flat())]);
+            heatmapContainer
+                .style("grid-template-columns", `repeat(${students.length}, ${cellSize}px)`)
+                .style("grid-template-rows", `repeat(${students.length}, ${cellSize}px)`);
 
-            // Create the scales for x and y axes
-            const xScale = d3.scaleBand()
-                .domain(students)
-                .range([0, width])
-                .padding(0.05);
+            // Add the cells to the grid
+            matrix.forEach((row, i) => {
+                row.forEach((value, j) => {
+                    heatmapContainer.append("div")
+                        .attr("class", "cell")
+                        .style("background-color", d3.interpolateYlGnBu(value / 100)) // Scale grade to color
+                        .style("color", "white")
+                        .text(value > 0 ? value.toFixed(1) : "")
+                        .on("click", function() {
+                            // Handle cell click for more interaction (e.g., toggle to see more details)
+                        });
+                });
+            });
 
-            const yScale = d3.scaleBand()
-                .domain(students)
-                .range([height, 0])
-                .padding(0.05);
-
-            // Draw the heatmap cells
-            svg.selectAll()
-                .data(heatmapMatrix.flat())
-                .enter()
-                .append("rect")
-                .attr("x", (d, i) => xScale(students[i % students.length]))
-                .attr("y", (d, i) => yScale(students[Math.floor(i / students.length)]))
-                .attr("width", xScale.bandwidth())
-                .attr("height", yScale.bandwidth())
-                .style("fill", d => colorScale(d))
-                .classed("cell", true);
-
-            // Add text labels inside cells
-            svg.selectAll()
-                .data(heatmapMatrix.flat())
-                .enter()
-                .append("text")
-                .attr("x", (d, i) => xScale(students[i % students.length]) + xScale.bandwidth() / 2)
-                .attr("y", (d, i) => yScale(students[Math.floor(i / students.length)]) + yScale.bandwidth() / 2)
-                .attr("dy", "0.35em")
-                .style("text-anchor", "middle")
-                .text(d => d ? d.toFixed(1) : "")
-                .style("font-size", "12px");
-
-            // Draw the axes
-            svg.append("g")
-                .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(xScale))
-                .selectAll("text")
-                .style("font-size", "12px");
-
-            svg.append("g")
-                .call(d3.axisLeft(yScale))
-                .selectAll("text")
-                .style("font-size", "12px");
-
-        }).catch(error => {
-            console.error("Error loading CSV data: ", error);
+            // Add labels (if needed)
+            const labelsContainer = d3.select("body").append("div").style("display", "flex").style("flex-wrap", "wrap").style("margin-top", "20px");
+            students.forEach(student => {
+                labelsContainer.append("div").text(student).style("margin-right", "10px");
+            });
         });
     </script>
 </body>
