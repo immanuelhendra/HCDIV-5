@@ -100,7 +100,8 @@
 
             // Create the diverging color scale (Red to Yellow to Green)
             const colorScale = d3.scaleSequential()
-                .interpolator(d3.interpolateRdYlGn)
+                .interpolator(d3.interpolateRdYlGn);
+                
 
             // Create the heatmap grid
             const heatmapContainer = d3.select("#heatmap");
@@ -116,7 +117,7 @@
                     const cell = heatmapContainer.append("div")
                         .attr("class", "cell")
                         .style("background-color", value === null || value === 0 ? "white" : colorScale(value)) // Apply the color scale
-                        .style("color", "white") // Set text color to white for all cells
+                        .style("color", value === null || value === 0 ? "black" : "white") // Ensure text color is readable for non-zero values
                         .text(value && value > 0 ? value.toFixed(1) : ""); // Display value if greater than 0, otherwise leave it empty
 
                     // Add interaction for each cell (optional)
