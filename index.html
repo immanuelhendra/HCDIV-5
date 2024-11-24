@@ -21,8 +21,6 @@
         }
         .heatmap {
             display: grid;
-            grid-template-columns: repeat(10, 30px);  /* Adjust cell size */
-            grid-template-rows: repeat(10, 30px);     /* Adjust cell size */
             gap: 1px;
         }
         .cell {
@@ -71,8 +69,7 @@
         // Load CSV file
         d3.csv("data.csv").then(function(data) {
             // Get unique students
-            const students = Array.from(new Set(data.flatMap(d => [d['Student 1'], d['Student 2']])));
-            students.sort();
+            const students = Array.from(new Set(data.flatMap(d => [d['Student 1'], d['Student 2']]))).sort();
 
             // Create a mapping for each student to an index
             const studentIndex = students.reduce((acc, student, idx) => {
@@ -81,7 +78,7 @@
             }, {});
 
             // Create the heatmap matrix
-            const matrix = Array.from({ length: students.length }, () => Array(students.length).fill(0));
+            const matrix = Array.from({ length: students.length }, () => Array(students.length).fill(null));
 
             // Populate the matrix with grades
             data.forEach(row => {
@@ -89,13 +86,11 @@
                 const j = studentIndex[row['Student 2']];
                 const grade = parseFloat(row['Average_Grade']);
 
-                if (matrix[i][j] !== 0) {
-                    matrix[i][j] = (matrix[i][j] + grade) / 2;
-                } else {
-                    matrix[i][j] = grade;
+                if (!isNaN(grade) && grade > 0) { // Only include valid grades (non-zero and non-NaN)
+                    // If there's already a value, average them; otherwise, set the value
+                    matrix[i][j] = matrix[i][j] ? (matrix[i][j] + grade) / 2 : grade;
+                    matrix[j][i] = matrix[i][j]; // Symmetry
                 }
-
-                matrix[j][i] = matrix[i][j]; // Symmetry
             });
 
             // Create the heatmap grid
@@ -109,14 +104,16 @@
             // Add the cells to the grid
             matrix.forEach((row, i) => {
                 row.forEach((value, j) => {
-                    heatmapContainer.append("div")
+                    const cell = heatmapContainer.append("div")
                         .attr("class", "cell")
-                        .style("background-color", d3.interpolateYlGnBu(value / 100)) // Scale grade to color
-                        .style("color", "white")
-                        .text(value > 0 ? value.toFixed(1) : "")
-                        .on("click", function() {
-                            // Handle cell click for more interaction (e.g., toggle to see more details)
-                        });
+                        .style("background-color", value === null ? "white" : d3.interpolateYlGnBu(value / 100)) // Use white for no data, else apply color scale
+                        .style("color", value === null ? "black" : "white") // Ensure text color is readable
+                        .text(value && value > 0 ? value.toFixed(1) : "");
+
+                    // Add interaction for each cell (optional)
+                    cell.on("click", function() {
+                        // You can add more interactions, e.g., showing additional details on click
+                    });
                 });
             });
 
