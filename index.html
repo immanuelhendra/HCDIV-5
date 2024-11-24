@@ -30,22 +30,22 @@
 
         // Load the data
         d3.csv("data.csv").then(data => {
-            // Extract unique students
-            const students1 = [...new Set(data.map(d => d["Student 1"]))];
-            const students2 = [...new Set(data.map(d => d["Student 2"]))];
+            // Extract unique students and sort for consistent axis labels
+            const students = [...new Set(data.map(d => d["Student 1"]))].sort();
+            const reversedStudents = students.slice().reverse(); // Reverse x-axis order
 
             // Create scales
             const xScale = d3.scaleBand()
-                .domain(students1)
+                .domain(reversedStudents)
                 .range([0, width])
                 .padding(0.05);
 
             const yScale = d3.scaleBand()
-                .domain(students2)
+                .domain(students)
                 .range([0, height])
                 .padding(0.05);
 
-            const colorScale = d3.scaleSequential(d3.interpolateBlues)
+            const colorScale = d3.scaleSequential(d3.interpolateYlGnBu)
                 .domain([d3.min(data, d => +d.Average_Grade), d3.max(data, d => +d.Average_Grade)]);
 
             // Draw axes
@@ -65,7 +65,7 @@
                 .attr("y", d => yScale(d["Student 2"]))
                 .attr("width", xScale.bandwidth())
                 .attr("height", yScale.bandwidth())
-                .style("fill", d => colorScale(+d.Average_Grade))
+                .style("fill", d => (+d.Average_Grade > 0 ? colorScale(+d.Average_Grade) : "#ccc"))
                 .classed("cell", true);
 
             // Add text
@@ -76,7 +76,7 @@
                 .attr("x", d => xScale(d["Student 1"]) + xScale.bandwidth() / 2)
                 .attr("y", d => yScale(d["Student 2"]) + yScale.bandwidth() / 2)
                 .attr("dy", "0.35em")
-                .text(d => +d.Average_Grade)
+                .text(d => (+d.Average_Grade > 0 ? +d.Average_Grade.toFixed(1) : ""))
                 .style("text-anchor", "middle")
                 .style("fill", "#000");
         });
