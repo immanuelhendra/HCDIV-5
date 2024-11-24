@@ -35,12 +35,15 @@
 
             // Extract unique students and sort them
             const students = Array.from(new Set(data.flatMap(d => [d["Student 1"], d["Student 2"]]))).sort();
+            console.log("Sorted students:", students);
 
             // Create a mapping for each student to their index in the matrix
             const studentIndex = students.reduce((acc, student, idx) => {
                 acc[student] = idx;
                 return acc;
             }, {});
+
+            console.log("Student Index Mapping:", studentIndex);
 
             // Create an empty matrix for the heatmap (symmetric)
             const heatmapMatrix = Array(students.length).fill().map(() => Array(students.length).fill(0));
@@ -51,9 +54,11 @@
                 const student2 = row["Student 2"];
                 const grade = +row["Average_Grade"];
 
-                // Ensure the pair is ordered (symmetry)
+                // Ensure the pair is ordered (treating (A, B) and (B, A) as the same)
                 const i = studentIndex[Math.min(student1, student2)];
                 const j = studentIndex[Math.max(student1, student2)];
+
+                console.log(`Processing pair: ${student1}, ${student2} (i: ${i}, j: ${j})`);
 
                 // If the value is already set, take the average grade for that pair
                 if (heatmapMatrix[i][j] !== 0) {
@@ -65,6 +70,9 @@
                 // Set the symmetric value as well
                 heatmapMatrix[j][i] = heatmapMatrix[i][j];
             });
+
+            // Log the heatmap matrix for debugging
+            console.log("Heatmap Matrix:", heatmapMatrix);
 
             // Set the color scale
             const colorScale = d3.scaleSequential(d3.interpolateYlGnBu)
