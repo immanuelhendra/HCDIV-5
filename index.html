@@ -21,8 +21,6 @@
         }
         .heatmap {
             display: grid;
-            grid-template-columns: repeat(10, 30px);  /* Adjust cell size */
-            grid-template-rows: repeat(10, 30px);     /* Adjust cell size */
             gap: 1px;
         }
         .cell {
@@ -80,22 +78,23 @@
                 return acc;
             }, {});
 
-            // Create the heatmap matrix
-            const matrix = Array.from({ length: students.length }, () => Array(students.length).fill(0));
+            // Create the heatmap matrix with NaN for empty cells
+            const matrix = Array.from({ length: students.length }, () => Array(students.length).fill(NaN));
 
-            // Populate the matrix with grades
+            // Populate the matrix with grades, ignoring empty or zero values
             data.forEach(row => {
                 const i = studentIndex[row['Student 1']];
                 const j = studentIndex[row['Student 2']];
                 const grade = parseFloat(row['Average_Grade']);
 
-                if (matrix[i][j] !== 0) {
-                    matrix[i][j] = (matrix[i][j] + grade) / 2;
-                } else {
-                    matrix[i][j] = grade;
+                if (grade > 0) {
+                    if (matrix[i][j] !== NaN) {
+                        matrix[i][j] = (matrix[i][j] + grade) / 2;
+                    } else {
+                        matrix[i][j] = grade;
+                    }
+                    matrix[j][i] = matrix[i][j]; // Symmetry
                 }
-
-                matrix[j][i] = matrix[i][j]; // Symmetry
             });
 
             // Create the heatmap grid
@@ -109,24 +108,27 @@
             // Add the cells to the grid
             matrix.forEach((row, i) => {
                 row.forEach((value, j) => {
-                    heatmapContainer.append("div")
-                        .attr("class", "cell")
-                        .style("background-color", d3.interpolateYlGnBu(value / 100)) // Scale grade to color
-                        .style("color", "white")
-                        .text(value > 0 ? value.toFixed(1) : "")
-                        .on("click", function() {
-                            // Handle cell click for more interaction (e.g., toggle to see more details)
-                        });
+                    if (!isNaN(value)) {  // Ignore cells with NaN
+                        heatmapContainer.append("div")
+                            .attr("class", "cell")
+                            .style("background-color", d3.interpolateYlGnBu(value / 100)) // Scale grade to color
+                            .style("color", "white")
+                            .text(value.toFixed(1));
+                    } else {
+                        heatmapContainer.append("div")
+                            .attr("class", "cell")
+                            .style("background-color", "#f0f0f0");  // Gray color for empty cells
+                    }
                 });
             });
 
-            // Add x-axis labels
+            // Add x-axis labels (same as the student order)
             const xAxisContainer = d3.select("#x-axis");
             students.forEach(student => {
                 xAxisContainer.append("div").text(student);
             });
 
-            // Add y-axis labels
+            // Add y-axis labels (same as the student order)
             const yAxisContainer = d3.select("#y-axis");
             students.forEach(student => {
                 yAxisContainer.append("div").text(student);
