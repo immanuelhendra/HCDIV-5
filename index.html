@@ -3,33 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Heatmap with Improved Legend</title>
+    <title>Heatmap of Student Pairs</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         .cell {
             stroke: #fff;
         }
         .axis text {
-            font-size: 12px;  /* Set font size of axis labels */
-        }
-        .legend rect {
-            height: 20px;
-        }
-        .legend text {
             font-size: 12px;
-        }
-        .tick line {
-            stroke: black;
-            stroke-width: 1;
         }
     </style>
 </head>
 <body>
     <script>
         // Define dimensions
-        const margin = {top: 50, right: 30, bottom: 150, left: 100};  // Increased bottom margin for more space
-        const width = 800 - margin.left - margin.right;  // Width for the chart
-        const height = 800 - margin.top - margin.bottom;  // Height should be the same as width for square cells
+        const margin = {top: 50, right: 30, bottom: 150, left: 100};
+        const width = 800 - margin.left - margin.right;
+        const height = 800 - margin.top - margin.bottom;
 
         // Create SVG container
         const svg = d3.select("body")
@@ -43,135 +33,88 @@
         d3.csv("data.csv").then(data => {
             console.log(data);  // Log the data to check if it's loaded correctly
 
-            // Ensure there are data points
-            if (data.length === 0) {
-                console.error("No data found in the CSV file!");
-                return;
-            }
+            // Extract unique students and sort them
+            const students = Array.from(new Set(data.flatMap(d => [d["Student 1"], d["Student 2"]]))).sort();
 
-            // Extract unique students from both "Student 1" and "Student 2"
-            const students1 = [...new Set(data.map(d => d["Student 1"]))];
-            const students2 = [...new Set(data.map(d => d["Student 2"]))];
+            // Create a mapping for each student to their index in the matrix
+            const studentIndex = students.reduce((acc, student, idx) => {
+                acc[student] = idx;
+                return acc;
+            }, {});
 
-            // Use the same domain for both x and y axis (ensuring they match)
-            const studentDomain = students1; // Or students2 since they are the same now
+            // Create an empty matrix for the heatmap (symmetric)
+            const heatmapMatrix = Array(students.length).fill().map(() => Array(students.length).fill(0));
 
-            // Create scales with equal size for both axes to make square cells
+            // Populate the matrix with grades
+            data.forEach(row => {
+                const student1 = row["Student 1"];
+                const student2 = row["Student 2"];
+                const grade = +row["Average_Grade"];
+
+                // Ensure the pair is ordered (symmetry)
+                const i = studentIndex[Math.min(student1, student2)];
+                const j = studentIndex[Math.max(student1, student2)];
+
+                // If the value is already set, take the average grade for that pair
+                if (heatmapMatrix[i][j] !== 0) {
+                    heatmapMatrix[i][j] = (heatmapMatrix[i][j] + grade) / 2;
+                } else {
+                    heatmapMatrix[i][j] = grade;
+                }
+
+                // Set the symmetric value as well
+                heatmapMatrix[j][i] = heatmapMatrix[i][j];
+            });
+
+            // Set the color scale
+            const colorScale = d3.scaleSequential(d3.interpolateYlGnBu)
+                .domain([d3.min(heatmapMatrix.flat()), d3.max(heatmapMatrix.flat())]);
+
+            // Create the scales for x and y axes
             const xScale = d3.scaleBand()
-                .domain(studentDomain)
-                .range([0, width])  // This will increase the space between cells
-                .padding(0.1);  // Adjust padding to control space between cells
+                .domain(students)
+                .range([0, width])
+                .padding(0.05);
 
             const yScale = d3.scaleBand()
-                .domain(studentDomain)  // Same domain as x-axis to ensure symmetry
-                .range([height, 0])  // Reversed range so that the bottom is the largest value
-                .padding(0.1);  // Adjust padding to control space between cells
+                .domain(students)
+                .range([height, 0])
+                .padding(0.05);
 
-            // Ensure square cells by adjusting the range of the scales dynamically
-            const cellSize = Math.min(width, height) / studentDomain.length;  // Calculate cell size based on the available space
-            xScale.range([0, cellSize * studentDomain.length]);
-            yScale.range([cellSize * studentDomain.length, 0]);  // Reversed range for y-axis
+            // Draw the heatmap cells
+            svg.selectAll()
+                .data(heatmapMatrix.flat())
+                .enter()
+                .append("rect")
+                .attr("x", (d, i) => xScale(students[i % students.length]))
+                .attr("y", (d, i) => yScale(students[Math.floor(i / students.length)]))
+                .attr("width", xScale.bandwidth())
+                .attr("height", yScale.bandwidth())
+                .style("fill", d => colorScale(d))
+                .classed("cell", true);
 
-            const colorScale = d3.scaleSequential(d3.interpolateRdYlGn)
-                .domain([d3.min(data, d => +d.Average_Grade), d3.max(data, d => +d.Average_Grade)]);
+            // Add text labels inside cells
+            svg.selectAll()
+                .data(heatmapMatrix.flat())
+                .enter()
+                .append("text")
+                .attr("x", (d, i) => xScale(students[i % students.length]) + xScale.bandwidth() / 2)
+                .attr("y", (d, i) => yScale(students[Math.floor(i / students.length)]) + yScale.bandwidth() / 2)
+                .attr("dy", "0.35em")
+                .style("text-anchor", "middle")
+                .text(d => d ? d.toFixed(1) : "")
+                .style("font-size", "12px");
 
-            // Draw axes
+            // Draw the axes
             svg.append("g")
                 .attr("transform", `translate(0,${height})`)
                 .call(d3.axisBottom(xScale))
                 .selectAll("text")
-                .style("font-size", "12px");  // Apply font size of 12px to x-axis labels
+                .style("font-size", "12px");
 
             svg.append("g")
                 .call(d3.axisLeft(yScale))
                 .selectAll("text")
-                .style("font-size", "12px");  // Apply font size of 12px to y-axis labels
-
-            // Draw heatmap cells
-            svg.selectAll()
-                .data(data)
-                .enter()
-                .append("rect")
-                .attr("x", d => xScale(d["Student 1"]))
-                .attr("y", d => yScale(d["Student 2"]))  // yScale is reversed, so this is the correct placement
-                .attr("width", xScale.bandwidth())  // Adjust width of cells (squares)
-                .attr("height", yScale.bandwidth())  // Adjust height of cells (squares)
-                .style("fill", d => colorScale(+d.Average_Grade))
-                .classed("cell", true);
-
-            // Add grade text inside cells with a fixed font size
-            svg.selectAll()
-                .data(data)
-                .enter()
-                .append("text")
-                .attr("x", d => xScale(d["Student 1"]) + xScale.bandwidth() / 2)
-                .attr("y", d => yScale(d["Student 2"]) + yScale.bandwidth() / 2)
-                .attr("dy", "0.35em")
-                .text(d => +d.Average_Grade)
-                .style("text-anchor", "middle")
-                .style("fill", "#000")
-                .style("font-size", "12px");  // Keep font size of grades constant
-
-            // Create the legend
-            const legendWidth = 500;
-            const legendHeight = 20;
-
-            const legend = svg.append("g")
-                .attr("transform", `translate(0, ${height + 30})`);  // Position the legend below the heatmap
-
-            // Create the color scale for the legend
-            const legendScale = d3.scaleLinear()
-                .domain([d3.min(data, d => +d.Average_Grade), d3.max(data, d => +d.Average_Grade)])
-                .range([0, legendWidth]);
-
-            // Add the gradient rectangle for the legend
-            legend.append("rect")
-                .attr("x", 0)
-                .attr("y", 0)
-                .attr("width", legendWidth)
-                .attr("height", legendHeight)
-                .style("fill", "url(#gradient)");
-
-            // Add the color gradient
-            const gradient = svg.append("defs")
-                .append("linearGradient")
-                .attr("id", "gradient")
-                .attr("x1", "0%")
-                .attr("x2", "100%")
-                .attr("y1", "0%")
-                .attr("y2", "0%");
-
-            gradient.selectAll("stop")
-                .data(colorScale.ticks(10))  // Define the ticks for the gradient
-                .enter()
-                .append("stop")
-                .attr("offset", d => `${(colorScale(d) * 100)}%`)
-                .attr("stop-color", d => colorScale(d));
-
-            // Add ticks (lines) along the gradient
-            const ticks = colorScale.ticks(10);  // Define how many ticks you want
-            legend.selectAll(".tick")
-                .data(ticks)
-                .enter()
-                .append("line")
-                .attr("x1", d => legendWidth * (colorScale(d) - colorScale.domain()[0]) / (colorScale.domain()[1] - colorScale.domain()[0]))
-                .attr("y1", 0)
-                .attr("x2", d => legendWidth * (colorScale(d) - colorScale.domain()[0]) / (colorScale.domain()[1] - colorScale.domain()[0]))
-                .attr("y2", legendHeight)
-                .style("stroke", "black")
-                .style("stroke-width", 1);
-
-            // Add labels for the ticks (min and max values)
-            legend.append("text")
-                .attr("x", 0)
-                .attr("y", legendHeight + 15)
-                .text(d3.min(data, d => +d.Average_Grade))
-                .style("font-size", "12px");
-
-            legend.append("text")
-                .attr("x", legendWidth)
-                .attr("y", legendHeight + 15)
-                .text(d3.max(data, d => +d.Average_Grade))
                 .style("font-size", "12px");
 
         }).catch(error => {
