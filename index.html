@@ -119,14 +119,6 @@
             const legend = svg.append("g")
                 .attr("transform", `translate(0, ${height + 30})`);  // Position the legend below the heatmap
 
-            // Create a rectangle for the continuous color spectrum
-            legend.append("rect")
-                .attr("x", 0)
-                .attr("y", 0)
-                .attr("width", legendWidth)
-                .attr("height", legendHeight)
-                .style("fill", "url(#gradient)");  // Use the gradient definition
-
             // Create a linear gradient for the color scale
             const gradient = svg.append("defs")
                 .append("linearGradient")
@@ -142,6 +134,14 @@
                 .append("stop")
                 .attr("offset", d => `${(colorScale(d) * 100)}%`)
                 .attr("stop-color", d => colorScale(d));
+
+            // Create a rectangle for the continuous color spectrum
+            legend.append("rect")
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("width", legendWidth)
+                .attr("height", legendHeight)
+                .style("fill", "url(#gradient)");  // Use the gradient definition
 
             // Add ticks (lines) along the gradient
             const ticks = colorScale.ticks(10);  // Define how many ticks you want
