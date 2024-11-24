@@ -10,7 +10,7 @@
             stroke: #fff;
         }
         .axis text {
-            font-size: 12px;  /* Set font size of axis labels to 12px */
+            font-size: 16px;  /* Increased font size for axis labels */
         }
     </style>
 </head>
@@ -47,8 +47,7 @@
             const yScale = d3.scaleBand()
                 .domain(studentDomain)  // Same domain as x-axis to ensure symmetry
                 .range([0, height])  // This will increase the space between cells
-                .padding(0.1)  // Optional: adjust for space between cells (but this also increases space between axis labels)
-                .reverse();  // Reverse the y-axis order to match the desired order
+                .padding(0.1);  // Optional: adjust for space between cells (but this also increases space between axis labels)
 
             const colorScale = d3.scaleSequential(d3.interpolateRdYlGn)
                 .domain([d3.min(data, d => +d.Average_Grade), d3.max(data, d => +d.Average_Grade)]);
@@ -58,12 +57,12 @@
                 .attr("transform", `translate(0,${height})`)
                 .call(d3.axisBottom(xScale))
                 .selectAll("text")
-                .style("font-size", "12px");  // Apply font size of 12px to x-axis labels
+                .style("font-size", "16px");  // Increased font size of axis labels
 
             svg.append("g")
                 .call(d3.axisLeft(yScale))
                 .selectAll("text")
-                .style("font-size", "12px");  // Apply font size of 12px to y-axis labels
+                .style("font-size", "16px");  // Increased font size of axis labels
 
             // Draw heatmap cells
             svg.selectAll()
@@ -85,4 +84,11 @@
                 .attr("x", d => xScale(d["Student 1"]) + xScale.bandwidth() / 2)
                 .attr("y", d => yScale(d["Student 2"]) + yScale.bandwidth() / 2)
                 .attr("dy", "0.35em")
-                .text(d 
+                .text(d => +d.Average_Grade)
+                .style("text-anchor", "middle")
+                .style("fill", "#000")
+                .style("font-size", "12px");  // Keep font size of grades constant
+        });
+    </script>
+</body>
+</html>
