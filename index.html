@@ -13,17 +13,19 @@
         }
         .tooltip {
             position: absolute;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 4px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            padding: 5px;
+            border-radius: 5px;
             pointer-events: none;
             font-size: 12px;
+            opacity: 0;
         }
     </style>
 </head>
 <body>
-    <div class="tooltip" style="opacity: 0;"></div>
+    <!-- Tooltip for hovering -->
+    <div class="tooltip"></div>
 
     <script>
         // Define dimensions
@@ -39,25 +41,23 @@
             .append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
-        // Create a tooltip
+        // Tooltip setup
         const tooltip = d3.select(".tooltip");
 
         // Load the data
         d3.csv("data.csv").then(data => {
-            // Extract unique students and sort them
-            const students = [...new Set(data.map(d => d["Student 1"]))].sort();
-
-            // Reverse the order of the x-axis (invert)
-            const reversedStudents = students.slice().reverse();
+            // Extract and sort unique students
+            const students1 = [...new Set(data.map(d => d["Student 1"]))].sort();
+            const students2 = [...new Set(data.map(d => d["Student 2"]))].sort();
 
             // Create scales
             const xScale = d3.scaleBand()
-                .domain(reversedStudents)
+                .domain(students1)
                 .range([0, width])
                 .padding(0.05);
 
             const yScale = d3.scaleBand()
-                .domain(students)
+                .domain(students2)
                 .range([0, height])
                 .padding(0.05);
 
@@ -69,8 +69,8 @@
                 .attr("transform", `translate(0,${height})`)
                 .call(d3.axisBottom(xScale))
                 .selectAll("text")
-                .style("text-anchor", "end")
-                .attr("transform", "rotate(-45)");
+                .attr("transform", "rotate(90)")
+                .style("text-anchor", "start");
 
             svg.append("g")
                 .call(d3.axisLeft(yScale));
@@ -89,7 +89,7 @@
                 .on("mouseover", (event, d) => {
                     if (+d.Average_Grade > 0) {
                         tooltip.style("opacity", 1)
-                            .html(`Grade: ${+d.Average_Grade.toFixed(1)}`)
+                            .html(`Student 1: ${d["Student 1"]}<br>Student 2: ${d["Student 2"]}<br>Grade: ${+d.Average_Grade.toFixed(1)}`)
                             .style("left", `${event.pageX + 10}px`)
                             .style("top", `${event.pageY - 20}px`);
                     }
@@ -102,7 +102,7 @@
                     tooltip.style("opacity", 0);
                 });
 
-            // Create a legend
+            // Add legend
             const legendWidth = 300;
             const legendHeight = 10;
 
@@ -115,21 +115,26 @@
 
             const legendAxis = d3.axisBottom(legendScale)
                 .ticks(5)
-                .tickSize(-legendHeight);
+                .tickFormat(d3.format(".1f"));
 
-            legendSvg.append("defs")
+            // Create gradient for legend
+            const legendGradient = legendSvg.append("defs")
                 .append("linearGradient")
                 .attr("id", "legend-gradient")
-                .selectAll("stop")
-                .data(colorScale.ticks(10).map((t, i, n) => ({
-                    offset: `${100 * i / (n.length - 1)}%`,
-                    color: colorScale(t)
-                })))
-                .enter()
-                .append("stop")
-                .attr("offset", d => d.offset)
-                .attr("stop-color", d => d.color);
+                .attr("x1", "0%")
+                .attr("x2", "100%")
+                .attr("y1", "0%")
+                .attr("y2", "0%");
 
+            legendGradient.append("stop")
+                .attr("offset", "0%")
+                .attr("stop-color", colorScale(colorScale.domain()[0]));
+
+            legendGradient.append("stop")
+                .attr("offset", "100%")
+                .attr("stop-color", colorScale(colorScale.domain()[1]));
+
+            // Draw legend
             legendSvg.append("rect")
                 .attr("width", legendWidth)
                 .attr("height", legendHeight)
@@ -137,8 +142,7 @@
 
             legendSvg.append("g")
                 .attr("transform", `translate(0, ${legendHeight})`)
-                .call(legendAxis)
-                .select(".domain").remove();
+                .call(legendAxis);
         });
     </script>
 </body>
