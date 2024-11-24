@@ -18,12 +18,16 @@
         .legend text {
             font-size: 12px;
         }
+        .tick line {
+            stroke: black;
+            stroke-width: 1;
+        }
     </style>
 </head>
 <body>
     <script>
         // Define dimensions
-        const margin = {top: 50, right: 30, bottom: 100, left: 100};  // Increased bottom margin for more space
+        const margin = {top: 50, right: 30, bottom: 150, left: 100};  // Increased bottom margin for more space
         const width = 800 - margin.left - margin.right;  // Width for the chart
         const height = 800 - margin.top - margin.bottom;  // Height should be the same as width for square cells
 
@@ -108,40 +112,60 @@
                 .style("fill", "#000")
                 .style("font-size", "12px");  // Keep font size of grades constant
 
-            // Create the horizontal legend
+            // Create the horizontal legend (continuous color spectrum with ticks)
             const legendWidth = width - 50;
             const legendHeight = 20;
 
             const legend = svg.append("g")
                 .attr("transform", `translate(0, ${height + 30})`);  // Position the legend below the heatmap
 
-            // Define the color scale for the legend
-            const legendScale = d3.scaleLinear()
-                .domain([d3.min(data, d => +d.Average_Grade), d3.max(data, d => +d.Average_Grade)])
-                .range([0, legendWidth]);
-
-            // Add the color bars (rectangles) for the legend
-            legend.append("g")
-                .selectAll("rect")
-                .data(d3.range(legendWidth))
-                .enter()
-                .append("rect")
-                .attr("x", d => legendScale(d))
+            // Create a rectangle for the continuous color spectrum
+            legend.append("rect")
+                .attr("x", 0)
                 .attr("y", 0)
-                .attr("width", legendWidth / 100)
+                .attr("width", legendWidth)
                 .attr("height", legendHeight)
-                .style("fill", d => colorScale(d));
+                .style("fill", "url(#gradient)");  // Use the gradient definition
 
-            // Add labels for the legend
+            // Create a linear gradient for the color scale
+            const gradient = svg.append("defs")
+                .append("linearGradient")
+                .attr("id", "gradient")
+                .attr("x1", "0%")
+                .attr("x2", "100%")
+                .attr("y1", "0%")
+                .attr("y2", "0%");
+
+            gradient.selectAll("stop")
+                .data(colorScale.ticks(10))  // Divide the range into 10 ticks
+                .enter()
+                .append("stop")
+                .attr("offset", d => `${(colorScale(d) * 100)}%`)
+                .attr("stop-color", d => colorScale(d));
+
+            // Add ticks (lines) along the gradient
+            const ticks = colorScale.ticks(10);  // Define how many ticks you want
+            legend.selectAll(".tick")
+                .data(ticks)
+                .enter()
+                .append("line")
+                .attr("x1", d => legendWidth * (colorScale(d) - colorScale.domain()[0]) / (colorScale.domain()[1] - colorScale.domain()[0]))
+                .attr("y1", 0)
+                .attr("x2", d => legendWidth * (colorScale(d) - colorScale.domain()[0]) / (colorScale.domain()[1] - colorScale.domain()[0]))
+                .attr("y2", legendHeight)
+                .style("stroke", "black")
+                .style("stroke-width", 1);
+
+            // Add labels for the ticks (min and max values)
             legend.append("text")
                 .attr("x", 0)
-                .attr("y", legendHeight + 10)
+                .attr("y", legendHeight + 15)
                 .text(d3.min(data, d => +d.Average_Grade))
                 .style("font-size", "12px");
 
             legend.append("text")
                 .attr("x", legendWidth)
-                .attr("y", legendHeight + 10)
+                .attr("y", legendHeight + 15)
                 .text(d3.max(data, d => +d.Average_Grade))
                 .style("font-size", "12px");
 
