@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Static Hexagon Plot</title>
+    <title>Static Hexagon Plot (First 10 Teams)</title>
     <script src="https://cdn.plot.ly/plotly-2.25.2.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
-    <h1 style="text-align: center;">Static Hexagon Plot for Teams</h1>
+    <h1 style="text-align: center;">Static Hexagon Plot (First 10 Teams)</h1>
     <div id="plot" style="width: 100%; height: 80vh;"></div>
 
     <script>
@@ -27,10 +27,8 @@
         function createPlot(data) {
             const traces = [];
             
-            data.forEach((row, i) => {
-                // Skip empty or invalid rows
-                if (!row["Team"] || !row["GRADE"]) return;
-
+            // Process only the first 10 rows
+            data.slice(0, 10).forEach((row, i) => {
                 const team = row["Team"];
                 const grade = parseFloat(row["GRADE"]);
                 const members = [
@@ -76,7 +74,7 @@
 
             // Create the plot
             Plotly.newPlot("plot", traces, {
-                title: "Static Hexagon Plot for Teams",
+                title: "Static Hexagon Plot (First 10 Teams)",
                 xaxis: { title: "Teams", showgrid: false, zeroline: false },
                 yaxis: { title: "Grades", showgrid: true },
                 showlegend: false,
@@ -90,7 +88,7 @@
             download: true,
             header: true,
             complete: function(results) {
-                // Filter out invalid rows
+                // Pass only the first 10 valid rows to createPlot
                 const validData = results.data.filter(row => row["Team"] && row["GRADE"]);
                 createPlot(validData);
             }
