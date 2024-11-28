@@ -28,6 +28,9 @@
             const traces = [];
             
             data.forEach((row, i) => {
+                // Skip empty or invalid rows
+                if (!row["Team"] || !row["GRADE"]) return;
+
                 const team = row["Team"];
                 const grade = parseFloat(row["GRADE"]);
                 const members = [
@@ -87,7 +90,9 @@
             download: true,
             header: true,
             complete: function(results) {
-                createPlot(results.data);
+                // Filter out invalid rows
+                const validData = results.data.filter(row => row["Team"] && row["GRADE"]);
+                createPlot(validData);
             }
         });
     </script>
