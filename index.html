@@ -72,7 +72,7 @@
                         mode: "lines",
                         fillcolor: color,
                         line: { color: "black", width: 0.5 },
-                        text: `Grade: ${grade}}`, // Hover text
+                        text: `Team: ${team}<br>Grade: ${grade}`, // Hover text
                         hoverinfo: "text" // Display only the text on hover
                     });
                 }
@@ -82,7 +82,7 @@
             Plotly.newPlot("plot", traces, {
                 title: "Static Hexagon Plot (All Teams)",
                 xaxis: { visible: false },
-                yaxis: { visible: false },
+                yaxis: { visible: true },
                 showlegend: false,
                 height: 400,
                 width: 2500
