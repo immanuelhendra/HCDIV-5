@@ -64,13 +64,16 @@
 
                     const color = genderColors[members[j]] || "gray";
 
+                    // Add trace with hover info
                     traces.push({
                         x: xCoords,
                         y: yCoords,
                         fill: "toself",
                         mode: "lines",
                         fillcolor: color,
-                        line: { color: "black", width: 0.5 }
+                        line: { color: "black", width: 0.5 },
+                        text: `Grade: ${grade}}`, // Hover text
+                        hoverinfo: "text" // Display only the text on hover
                     });
                 }
             });
@@ -79,7 +82,7 @@
             Plotly.newPlot("plot", traces, {
                 title: "Static Hexagon Plot (All Teams)",
                 xaxis: { visible: false },
-                yaxis: { visible: true },
+                yaxis: { visible: false },
                 showlegend: false,
                 height: 400,
                 width: 2500
