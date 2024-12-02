@@ -39,7 +39,7 @@
                 const yCenter = grade;
 
                 // Scale hexagon size based on grade
-                const hexSize = (grade - 70)/5;
+                const hexSize = 2.5;
 
                 // Get hexagon vertices
                 const [hexX, hexY] = hexagonVertices(xCenter, yCenter, hexSize);
@@ -81,7 +81,7 @@
                 xaxis: { visible: false },
                 yaxis: { visible: true },
                 showlegend: false,
-                height: 800,
+                height: 600,
                 width: 2500
             });
         }
