@@ -90,14 +90,18 @@
         }
 
         // Load CSV file and parse it
-        Papa.parse("Sample File HCDIV.csv", {
-            download: true,
-            header: true,
-            complete: function(results) {
-                const validData = results.data.filter(row => row["Team"] && row["GRADE"]);
-                createPlot(validData);
-            }
-        });
+       Papa.parse("Sample File HCDIV.csv", {
+    download: true,
+    header: true,
+    complete: function(results) {
+        // Filter and sort the data by "GRADE" in descending order
+        const validData = results.data
+            .filter(row => row["Team"] && row["GRADE"])
+            .sort((a, b) => parseFloat(b["GRADE"]) - parseFloat(a["GRADE"]);
+
+        createPlot(validData);
+    }
+});
     </script>
 </body>
 </html>
