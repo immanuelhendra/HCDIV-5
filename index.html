@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Static Hexagon Plot (First 10 Teams)</title>
+    <title>Static Hexagon Plot (All Teams)</title>
     <script src="https://cdn.plot.ly/plotly-2.25.2.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
-    <h1 style="text-align: center;">Static Hexagon Plot (First 10 Teams)</h1>
+    <h1 style="text-align: center;">Static Hexagon Plot (All Teams)</h1>
     <div id="plot" style="width: 100%; height: 80vh;"></div>
 
     <script>
@@ -26,7 +26,7 @@
         // Function to process data and create the plot
         function createPlot(data) {
             const traces = [];
-            data.slice(0, 10).forEach((row, i) => {
+            data.forEach((row, i) => { // Iterate through all rows
                 const team = row["Team"];
                 const grade = parseFloat(row["GRADE"]);
                 const members = [
@@ -35,11 +35,11 @@
                 ];
 
                 // Calculate hexagon center
-                const xCenter = i * 5; // Increased spacing for larger hexagons
+                const xCenter = i * 5; // Space out hexagons
                 const yCenter = grade;
 
                 // Scale hexagon size based on grade
-                const hexSize = grade / 10;
+                const hexSize = grade - 70;
 
                 // Get hexagon vertices
                 const [hexX, hexY] = hexagonVertices(xCenter, yCenter, hexSize);
@@ -77,9 +77,9 @@
 
             // Create the plot without x and y axes
             Plotly.newPlot("plot", traces, {
-                title: "Static Hexagon Plot (First 10 Teams)",
-                xaxis: { visible: false }, // Hide x-axis
-                yaxis: { visible: false }, // Hide y-axis
+                title: "Static Hexagon Plot (All Teams)",
+                xaxis: { visible: false },
+                yaxis: { visible: true },
                 showlegend: false,
                 height: 800,
                 width: 1200
