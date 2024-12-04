@@ -31,15 +31,9 @@
 
         // Function to create the hexagon plot
         function createPlot(data, plotId, sorted = false) {
-            // If sorted is true, sort by male-to-female ratio
+            // If sorted is true, sort solely by male count (descending)
             if (sorted) {
-                data.sort((a, b) => {
-                    const maleA = a.maleCount;
-                    const femaleA = a.femaleCount;
-                    const maleB = b.maleCount;
-                    const femaleB = b.femaleCount;
-                    return maleB - femaleB || femaleA - femaleB; // Sort by male desc, then female asc
-                });
+                data.sort((a, b) => b.maleCount - a.maleCount); // Descending male count
             }
 
             const traces = [];
@@ -52,7 +46,6 @@
                 ].map(m => m.trim().toUpperCase());
 
                 const maleCount = members.filter(m => m === "MALE").length;
-                const femaleCount = members.filter(m => m === "FEMALE").length;
 
                 const xCenter = i * 5; // Space out hexagons
                 const yCenter = grade; // Use grade for vertical positioning
@@ -85,7 +78,7 @@
                         mode: "lines",
                         fillcolor: color,
                         line: { color: "black", width: 0.5 },
-                        text: `Team: ${team}<br>Grade: ${grade}<br>Males: ${maleCount}<br>Females: ${femaleCount}`,
+                        text: `Team: ${team}<br>Grade: ${grade}<br>Males: ${maleCount}<br>Females: ${6 - maleCount}`,
                         hoverinfo: "text"
                     });
                 }
@@ -114,7 +107,6 @@
                     ].map(m => m.trim().toUpperCase());
 
                     row.maleCount = members.filter(m => m === "MALE").length;
-                    row.femaleCount = members.filter(m => m === "FEMALE").length;
                 });
 
                 // Create the original plot
