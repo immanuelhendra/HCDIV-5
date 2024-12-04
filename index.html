@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Static Hexagon Plot (All Teams)</title>
+    <title>Hexagon Plot Based on Male-Female Ratio</title>
     <script src="https://cdn.plot.ly/plotly-2.25.2.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
-    <h1 style="text-align: center;">Static Hexagon Plot (All Teams)</h1>
+    <h1 style="text-align: center;">Hexagon Plot (Male-Female Ratio)</h1>
     <div id="plot" style="width: 100%; height: 80vh;"></div>
 
     <script>
         // Define colors for genders
         const genderColors = { "MALE": "blue", "FEMALE": "pink" };
 
-        // Function to calculate hexagon vertices with dynamic size
+        // Function to calculate hexagon vertices
         function hexagonVertices(xCenter, yCenter, size) {
             const angles = Array.from({ length: 7 }, (_, i) => (i * 2 * Math.PI) / 6);
             const x = angles.map(angle => xCenter + size * Math.cos(angle));
@@ -23,165 +23,81 @@
             return [x, y];
         }
 
-        // Function to process data and create the plot
+        // Function to create the plot
         function createPlot(data) {
             const traces = [];
-            data.forEach((row, i) => { // Iterate through all rows
+
+            data.forEach((row, i) => {
                 const team = row["Team"];
                 const grade = parseFloat(row["GRADE"]);
+
+                // Clean and count genders
                 const members = [
                     row["Member 1"], row["Member 2"], row["Member 3"],
                     row["Member 4"], row["Member 5"], row["Member 6"]
-                ];
+                ].map(m => m.trim().toUpperCase());
+
+                const maleCount = members.filter(m => m === "MALE").length;
+                const femaleCount = members.filter(m => m === "FEMALE").length;
 
                 // Calculate hexagon center
                 const xCenter = i * 5; // Space out hexagons
                 const yCenter = grade;
 
-                // Scale hexagon size based on grade
+                // Scale hexagon size
                 const hexSize = 2.5;
 
                 // Get hexagon vertices
                 const [hexX, hexY] = hexagonVertices(xCenter, yCenter, hexSize);
 
-                // Add each segment of the hexagon as a separate trace
+                // Define hexagon segments based on male-female ratio
+                let currentAngle = 0;
+                const total = maleCount + femaleCount;
                 for (let j = 0; j < 6; j++) {
-                    const angle = j * (2 * Math.PI / 6);
-                    const nextAngle = (j + 1) * (2 * Math.PI / 6);
+                    const gender = j < maleCount ? "MALE" : "FEMALE";
+                    const nextAngle = currentAngle + (2 * Math.PI / total);
 
                     const xCoords = [
                         xCenter,
-                        xCenter + hexSize * Math.cos(angle),
+                        xCenter + hexSize * Math.cos(currentAngle),
                         xCenter + hexSize * Math.cos(nextAngle),
                         xCenter
                     ];
                     const yCoords = [
                         yCenter,
-                        yCenter + hexSize * Math.sin(angle),
+                        yCenter + hexSize * Math.sin(currentAngle),
                         yCenter + hexSize * Math.sin(nextAngle),
                         yCenter
                     ];
 
-                    const color = genderColors[members[j]] || "gray";
+                    currentAngle = nextAngle;
 
-                    // Add trace with hover info
+                    // Add segment trace
                     traces.push({
                         x: xCoords,
                         y: yCoords,
                         fill: "toself",
                         mode: "lines",
-                        fillcolor: color,
+                        fillcolor: genderColors[gender] || "gray",
                         line: { color: "black", width: 0.5 },
-                        text: `Team: ${team}<br>Grade: ${grade}`, // Hover text
-                        hoverinfo: "text" // Display only the text on hover
+                        text: `Team: ${team}<br>Grade: ${grade}<br>Male: ${maleCount}<br>Female: ${femaleCount}`,
+                        hoverinfo: "text"
                     });
                 }
             });
 
-            // Create the plot without x and y axes
+            // Plot the hexagons
             Plotly.newPlot("plot", traces, {
-                title: "Static Hexagon Plot (All Teams)",
+                title: "Hexagon Plot (Male-Female Ratio)",
                 xaxis: { visible: false },
-                yaxis: { visible: true },
+                yaxis: { title: "Grades", showgrid: true },
                 showlegend: false,
-                height: 400,
+                height: 600,
                 width: 2500
             });
         }
 
-        // Load CSV file and parse it
-       <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Static Hexagon Plot (All Teams)</title>
-    <script src="https://cdn.plot.ly/plotly-2.25.2.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-</head>
-<body>
-    <h1 style="text-align: center;">Static Hexagon Plot (All Teams)</h1>
-    <div id="plot" style="width: 100%; height: 80vh;"></div>
-
-    <script>
-        // Define colors for genders
-        const genderColors = { "MALE": "blue", "FEMALE": "pink" };
-
-        // Function to calculate hexagon vertices with dynamic size
-        function hexagonVertices(xCenter, yCenter, size) {
-            const angles = Array.from({ length: 7 }, (_, i) => (i * 2 * Math.PI) / 6);
-            const x = angles.map(angle => xCenter + size * Math.cos(angle));
-            const y = angles.map(angle => yCenter + size * Math.sin(angle));
-            return [x, y];
-        }
-
-        // Function to process data and create the plot
-        function createPlot(data) {
-            const traces = [];
-            data.forEach((row, i) => { // Iterate through all rows
-                const team = row["Team"];
-                const grade = parseFloat(row["GRADE"]);
-                const members = [
-                    row["Member 1"], row["Member 2"], row["Member 3"],
-                    row["Member 4"], row["Member 5"], row["Member 6"]
-                ];
-
-                // Calculate hexagon center
-                const xCenter = i * 5; // Space out hexagons
-                const yCenter = grade;
-
-                // Scale hexagon size based on grade
-                const hexSize = 2.5;
-
-                // Get hexagon vertices
-                const [hexX, hexY] = hexagonVertices(xCenter, yCenter, hexSize);
-
-                // Add each segment of the hexagon as a separate trace
-                for (let j = 0; j < 6; j++) {
-                    const angle = j * (2 * Math.PI / 6);
-                    const nextAngle = (j + 1) * (2 * Math.PI / 6);
-
-                    const xCoords = [
-                        xCenter,
-                        xCenter + hexSize * Math.cos(angle),
-                        xCenter + hexSize * Math.cos(nextAngle),
-                        xCenter
-                    ];
-                    const yCoords = [
-                        yCenter,
-                        yCenter + hexSize * Math.sin(angle),
-                        yCenter + hexSize * Math.sin(nextAngle),
-                        yCenter
-                    ];
-
-                    const color = genderColors[members[j]] || "gray";
-
-                    // Add trace with hover info
-                    traces.push({
-                        x: xCoords,
-                        y: yCoords,
-                        fill: "toself",
-                        mode: "lines",
-                        fillcolor: color,
-                        line: { color: "black", width: 0.5 },
-                        text: `Team: ${team}<br>Grade: ${grade}`, // Hover text
-                        hoverinfo: "text" // Display only the text on hover
-                    });
-                }
-            });
-
-            // Create the plot without x and y axes
-            Plotly.newPlot("plot", traces, {
-                Title: 'Hexagon Plot for All Teams',
-                xaxis: { visible: false },
-                yaxis: { visible: true },
-                showlegend: false,
-                height: 500,
-                width: 2500
-            });
-        }
-
-        // Load CSV file and parse it
+        // Load and clean CSV data
         Papa.parse("Sample File HCDIV.csv", {
             download: true,
             header: true,
@@ -190,12 +106,6 @@
                 createPlot(validData);
             }
         });
-    </script>
-</body>
-</html>
-
-    }
-});
     </script>
 </body>
 </html>
