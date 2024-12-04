@@ -3,13 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hexagon Plot Based on Male-Female Ratio</title>
+    <title>Hexagon Plot with Sorted View</title>
     <script src="https://cdn.plot.ly/plotly-2.25.2.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
-    <h1 style="text-align: center;">Hexagon Plot (Male-Female Ratio)</h1>
-    <div id="plot" style="width: 100%; height: 80vh;"></div>
+    <h1 style="text-align: center;">Hexagon Plot</h1>
+
+    <!-- Original Plot -->
+    <div id="plot" style="width: 100%; height: 50vh;"></div>
+
+    <!-- Sorted Plot -->
+    <h2 style="text-align: center;">Sorted Hexagon Plot</h2>
+    <div id="sortedPlot" style="width: 100%; height: 50vh;"></div>
 
     <script>
         // Define colors for genders
@@ -23,15 +29,23 @@
             return [x, y];
         }
 
-        // Function to create the plot
-        function createPlot(data) {
-            const traces = [];
+        // Function to create the hexagon plot
+        function createPlot(data, plotId, sorted = false) {
+            // If sorted is true, sort by male-to-female ratio
+            if (sorted) {
+                data.sort((a, b) => {
+                    const maleA = a.maleCount;
+                    const femaleA = a.femaleCount;
+                    const maleB = b.maleCount;
+                    const femaleB = b.femaleCount;
+                    return maleB - femaleB || femaleA - femaleB; // Sort by male desc, then female asc
+                });
+            }
 
+            const traces = [];
             data.forEach((row, i) => {
                 const team = row["Team"];
                 const grade = parseFloat(row["GRADE"]);
-
-                // Clean and count genders
                 const members = [
                     row["Member 1"], row["Member 2"], row["Member 3"],
                     row["Member 4"], row["Member 5"], row["Member 6"]
@@ -40,70 +54,74 @@
                 const maleCount = members.filter(m => m === "MALE").length;
                 const femaleCount = members.filter(m => m === "FEMALE").length;
 
-                // Calculate hexagon center
                 const xCenter = i * 5; // Space out hexagons
-                const yCenter = grade;
-
-                // Scale hexagon size
+                const yCenter = grade; // Use grade for vertical positioning
                 const hexSize = 2.5;
 
-                // Get hexagon vertices
-                const [hexX, hexY] = hexagonVertices(xCenter, yCenter, hexSize);
-
-                // Define hexagon segments based on male-female ratio
-                let currentAngle = 0;
-                const total = maleCount + femaleCount;
+                // Add hexagon segments
                 for (let j = 0; j < 6; j++) {
-                    const gender = j < maleCount ? "MALE" : "FEMALE";
-                    const nextAngle = currentAngle + (2 * Math.PI / total);
+                    const angle = j * (2 * Math.PI / 6);
+                    const nextAngle = (j + 1) * (2 * Math.PI / 6);
 
                     const xCoords = [
                         xCenter,
-                        xCenter + hexSize * Math.cos(currentAngle),
+                        xCenter + hexSize * Math.cos(angle),
                         xCenter + hexSize * Math.cos(nextAngle),
                         xCenter
                     ];
                     const yCoords = [
                         yCenter,
-                        yCenter + hexSize * Math.sin(currentAngle),
+                        yCenter + hexSize * Math.sin(angle),
                         yCenter + hexSize * Math.sin(nextAngle),
                         yCenter
                     ];
 
-                    currentAngle = nextAngle;
+                    const color = j < maleCount ? genderColors["MALE"] : genderColors["FEMALE"];
 
-                    // Add segment trace
                     traces.push({
                         x: xCoords,
                         y: yCoords,
                         fill: "toself",
                         mode: "lines",
-                        fillcolor: genderColors[gender] || "gray",
+                        fillcolor: color,
                         line: { color: "black", width: 0.5 },
-                        text: `Team: ${team}<br>Grade: ${grade}<br>Male: ${maleCount}<br>Female: ${femaleCount}`,
+                        text: `Team: ${team}<br>Grade: ${grade}<br>Males: ${maleCount}<br>Females: ${femaleCount}`,
                         hoverinfo: "text"
                     });
                 }
             });
 
             // Plot the hexagons
-            Plotly.newPlot("plot", traces, {
-                title: "Hexagon Plot (Male-Female Ratio)",
+            Plotly.newPlot(plotId, traces, {
                 xaxis: { visible: false },
-                yaxis: { title: "Grades", showgrid: true },
+                yaxis: { visible: true },
                 showlegend: false,
-                height: 600,
+                height: 400,
                 width: 2500
             });
         }
 
-        // Load and clean CSV data
+        // Parse the CSV and create plots
         Papa.parse("Sample File HCDIV.csv", {
             download: true,
             header: true,
             complete: function(results) {
                 const validData = results.data.filter(row => row["Team"] && row["GRADE"]);
-                createPlot(validData);
+                validData.forEach(row => {
+                    const members = [
+                        row["Member 1"], row["Member 2"], row["Member 3"],
+                        row["Member 4"], row["Member 5"], row["Member 6"]
+                    ].map(m => m.trim().toUpperCase());
+
+                    row.maleCount = members.filter(m => m === "MALE").length;
+                    row.femaleCount = members.filter(m => m === "FEMALE").length;
+                });
+
+                // Create the original plot
+                createPlot(validData, "plot");
+
+                // Create the sorted plot
+                createPlot(validData, "sortedPlot", true);
             }
         });
     </script>
