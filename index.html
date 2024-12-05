@@ -46,6 +46,8 @@
             });
 
             const traces = [];
+            const spacingFactor = 10; // Spacing between x-axis categories
+            const hexSize = 1.5; // Smaller hexagon size
             let xIndex = 0;
 
             // Generate traces for each group
@@ -60,9 +62,8 @@
                     ].map(m => m.trim().toUpperCase());
 
                     const maleCount = members.filter(m => m === "MALE").length;
-                    const xCenter = xIndex; // Grouped by xIndex for each composition
+                    const xCenter = xIndex * spacingFactor; // Grouped by xIndex with spacing
                     const yCenter = grade; // Use grade for vertical positioning
-                    const hexSize = 2.5;
 
                     // Add hexagon segments
                     for (let j = 0; j < 6; j++) {
@@ -105,7 +106,7 @@
             Plotly.newPlot("groupedPlot", traces, {
                 xaxis: {
                     title: "Male-Female Composition",
-                    tickvals: Array.from({ length: sortedGroups.length }, (_, i) => i),
+                    tickvals: Array.from({ length: sortedGroups.length }, (_, i) => i * spacingFactor),
                     ticktext: sortedGroups,
                     categoryorder: "array",
                     categoryarray: sortedGroups,
@@ -115,7 +116,7 @@
                 },
                 showlegend: false,
                 height: 400,
-                width: 2500
+                width: 2000
             });
         }
 
