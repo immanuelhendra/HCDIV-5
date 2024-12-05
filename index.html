@@ -3,12 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hexagon Plot Grouped by Male-Female Compositions</title>
+    <title>Combined Hexagon Diagrams</title>
     <script src="https://cdn.plot.ly/plotly-2.25.2.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
-    <h1 style="text-align: center;">Hexagon Plot Grouped by Male-Female Compositions</h1>
+    <h1 style="text-align: center;">Combined Hexagon Diagrams</h1>
+
+    <!-- Raw Data Diagram -->
+    <h2 style="text-align: center;">Raw Data Diagram (Sorted by Male Count)</h2>
+    <div id="sortedPlot" style="width: 100%; height: 30vh;"></div>
+
+    <!-- Grouped Plot -->
+    <h2 style="text-align: center;">Grouped Scatter Plot (Grouped by Male-Female Compositions)</h2>
     <div id="groupedPlot" style="width: 100%; height: 30vh;"></div>
 
     <script>
@@ -23,7 +30,70 @@
             return [x, y];
         }
 
-        // Function to create the hexagon plot grouped by male-female composition
+        // Function to create the raw data plot
+        function createRawPlot(data) {
+            // Sort by male count (descending)
+            data.sort((a, b) => b.maleCount - a.maleCount);
+
+            const traces = [];
+            data.forEach((row, i) => {
+                const team = row["Team"];
+                const grade = parseFloat(row["GRADE"]);
+                const members = [
+                    row["Member 1"], row["Member 2"], row["Member 3"],
+                    row["Member 4"], row["Member 5"], row["Member 6"]
+                ].map(m => m.trim().toUpperCase());
+
+                const maleCount = members.filter(m => m === "MALE").length;
+
+                const xCenter = i * 5; // Space out hexagons
+                const yCenter = grade; // Use grade for vertical positioning
+                const hexSize = 2.5;
+
+                // Add hexagon segments
+                for (let j = 0; j < 6; j++) {
+                    const angle = j * (2 * Math.PI / 6);
+                    const nextAngle = (j + 1) * (2 * Math.PI / 6);
+
+                    const xCoords = [
+                        xCenter,
+                        xCenter + hexSize * Math.cos(angle),
+                        xCenter + hexSize * Math.cos(nextAngle),
+                        xCenter
+                    ];
+                    const yCoords = [
+                        yCenter,
+                        yCenter + hexSize * Math.sin(angle),
+                        yCenter + hexSize * Math.sin(nextAngle),
+                        yCenter
+                    ];
+
+                    const color = j < maleCount ? genderColors["MALE"] : genderColors["FEMALE"];
+
+                    traces.push({
+                        x: xCoords,
+                        y: yCoords,
+                        fill: "toself",
+                        mode: "lines",
+                        fillcolor: color,
+                        line: { color: "black", width: 0.5 },
+                        text: `Team: ${team}<br>Grade: ${grade}<br>Males: ${maleCount}<br>Females: ${6 - maleCount}`,
+                        hoverinfo: "text"
+                    });
+                }
+            });
+
+            // Plot the hexagons
+            Plotly.newPlot("sortedPlot", traces, {
+                xaxis: { visible: false },
+                yaxis: { visible: true },
+                showlegend: false,
+                height: 400,
+                width: 2500
+            });
+        }
+
+        // Function to create the grouped plot
         function createGroupedPlot(data) {
             // Group teams by male-female compositions
             const compositionGroups = {};
@@ -120,7 +190,7 @@
             });
         }
 
-        // Parse the CSV and create plot
+        // Parse the CSV and create both plots
         Papa.parse("Sample File HCDIV.csv", {
             download: true,
             header: true,
@@ -134,6 +204,9 @@
 
                     row.maleCount = members.filter(m => m === "MALE").length;
                 });
+
+                // Create the raw data plot
+                createRawPlot(validData);
 
                 // Create the grouped plot
                 createGroupedPlot(validData);
