@@ -3,36 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Combined Hexagon Diagrams</title>
+    <title>Combined Hexagon Diagrams with Best Fit Line</title>
     <script src="https://cdn.plot.ly/plotly-2.25.2.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        #sortedPlot, #groupedPlot {
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-    <h1 style="text-align: center;">Combined Hexagon Diagrams</h1>
+    <h1 style="text-align: center;">Combined Hexagon Diagrams with Best Fit Line</h1>
 
     <!-- Raw Data Diagram -->
     <h2 style="text-align: center;">Raw Data Diagram (Sorted by Male Count)</h2>
-    <div id="sortedPlot" style="width: 100%; height: 30vh;"></div>
+    <div id="sortedPlot" style="width: 100%; height: 600px;"></div>
 
-    <!-- Grouped Plot -->
+    <!-- Grouped Scatter Plot -->
     <h2 style="text-align: center;">Grouped Scatter Plot (Grouped by Male-Female Compositions)</h2>
-    <div id="groupedPlot" style="width: 100%; height: 30vh;"></div>
+    <div id="groupedPlot" style="width: 100%; height: 400px;"></div>
 
     <script>
         // Define colors for genders
         const genderColors = { "MALE": "blue", "FEMALE": "pink" };
 
-        // Function to calculate hexagon vertices
-        function hexagonVertices(xCenter, yCenter, size) {
-            const angles = Array.from({ length: 7 }, (_, i) => (i * 2 * Math.PI) / 6);
-            const x = angles.map(angle => xCenter + size * Math.cos(angle));
-            const y = angles.map(angle => yCenter + size * Math.sin(angle));
-            return [x, y];
+        // Function to calculate the best-fit line
+        function calculateBestFitLine(x, y) {
+            const n = x.length;
+            const meanX = x.reduce((sum, val) => sum + val, 0) / n;
+            const meanY = y.reduce((sum, val) => sum + val, 0) / n;
+
+            const numerator = x.map((xi, i) => (xi - meanX) * (y[i] - meanY)).reduce((sum, val) => sum + val, 0);
+            const denominator = x.map(xi => (xi - meanX) ** 2).reduce((sum, val) => sum + val, 0);
+
+            const slope = numerator / denominator;
+            const intercept = meanY - slope * meanX;
+
+            return { slope, intercept };
         }
 
         // Function to create the raw data plot
         function createRawPlot(data) {
-            // Sort by male count (descending)
             data.sort((a, b) => b.maleCount - a.maleCount);
 
             const traces = [];
@@ -46,11 +61,10 @@
 
                 const maleCount = members.filter(m => m === "MALE").length;
 
-                const xCenter = i * 5; // Space out hexagons
-                const yCenter = grade; // Use grade for vertical positioning
+                const xCenter = i * 5;
+                const yCenter = grade;
                 const hexSize = 2.5;
 
-                // Add hexagon segments
                 for (let j = 0; j < 6; j++) {
                     const angle = j * (2 * Math.PI / 6);
                     const nextAngle = (j + 1) * (2 * Math.PI / 6);
@@ -83,7 +97,6 @@
                 }
             });
 
-            // Plot the hexagons
             Plotly.newPlot("sortedPlot", traces, {
                 xaxis: { visible: false },
                 yaxis: { visible: true },
@@ -95,8 +108,11 @@
 
         // Function to create the grouped plot
         function createGroupedPlot(data) {
-            // Group teams by male-female compositions
             const compositionGroups = {};
+            const grades = [];
+            const maleCounts = [];
+            const xCategories = [];
+
             data.forEach(row => {
                 const maleCount = row.maleCount;
                 const femaleCount = 6 - maleCount;
@@ -104,88 +120,63 @@
 
                 if (!compositionGroups[group]) {
                     compositionGroups[group] = [];
+                    xCategories.push(group);
                 }
-                compositionGroups[group].push(row);
-            });
 
-            // Sort groups by male count (descending)
-            const sortedGroups = Object.keys(compositionGroups).sort((a, b) => {
-                const maleA = parseInt(a.split(" ")[0]);
-                const maleB = parseInt(b.split(" ")[0]);
-                return maleB - maleA;
+                compositionGroups[group].push(row);
+                grades.push(parseFloat(row["GRADE"]));
+                maleCounts.push(maleCount);
             });
 
             const traces = [];
-            const spacingFactor = 3; // Spacing between x-axis categories
-            const hexSize = 1; // Smaller hexagon size
             let xIndex = 0;
 
-            // Generate traces for each group
-            sortedGroups.forEach(group => {
+            xCategories.forEach(group => {
                 const teams = compositionGroups[group];
-                teams.forEach((row, teamIndex) => {
-                    const team = row["Team"];
+                teams.forEach(row => {
                     const grade = parseFloat(row["GRADE"]);
-                    const members = [
-                        row["Member 1"], row["Member 2"], row["Member 3"],
-                        row["Member 4"], row["Member 5"], row["Member 6"]
-                    ].map(m => m.trim().toUpperCase());
-
-                    const maleCount = members.filter(m => m === "MALE").length;
-                    const xCenter = xIndex * spacingFactor; // Grouped by xIndex with spacing
-                    const yCenter = grade; // Use grade for vertical positioning
-
-                    // Add hexagon segments
-                    for (let j = 0; j < 6; j++) {
-                        const angle = j * (2 * Math.PI / 6);
-                        const nextAngle = (j + 1) * (2 * Math.PI / 6);
-
-                        const xCoords = [
-                            xCenter,
-                            xCenter + hexSize * Math.cos(angle),
-                            xCenter + hexSize * Math.cos(nextAngle),
-                            xCenter
-                        ];
-                        const yCoords = [
-                            yCenter,
-                            yCenter + hexSize * Math.sin(angle),
-                            yCenter + hexSize * Math.sin(nextAngle),
-                            yCenter
-                        ];
-
-                        const color = j < maleCount ? genderColors["MALE"] : genderColors["FEMALE"];
-
-                        traces.push({
-                            x: xCoords,
-                            y: yCoords,
-                            fill: "toself",
-                            mode: "lines",
-                            fillcolor: color,
-                            line: { color: "black", width: 0.5 },
-                            text: `Team: ${team}<br>Grade: ${grade}<br>Males: ${maleCount}<br>Females: ${6 - maleCount}`,
-                            hoverinfo: "text"
-                        });
-                    }
+                    traces.push({
+                        x: [xIndex],
+                        y: [grade],
+                        mode: "markers",
+                        marker: {
+                            size: 10,
+                            color: "purple"
+                        },
+                        text: `Grade: ${grade}<br>${group}`,
+                        hoverinfo: "text"
+                    });
                 });
-
-                // Increment xIndex for the next group
-                xIndex += 1;
+                xIndex++;
             });
 
-            // Create x-axis categories
+            // Calculate best fit line
+            const { slope, intercept } = calculateBestFitLine(maleCounts, grades);
+            const fitLineX = [0, 6];
+            const fitLineY = fitLineX.map(x => slope * x + intercept);
+            const equation = `y = ${slope.toFixed(2)}x + ${intercept.toFixed(2)}`;
+
+            // Add best-fit line to the plot
+            traces.push({
+                x: fitLineX,
+                y: fitLineY,
+                mode: "lines",
+                line: { color: "red", dash: "dash" },
+                name: `Best Fit Line (${equation})`,
+                hoverinfo: "none"
+            });
+
             Plotly.newPlot("groupedPlot", traces, {
                 xaxis: {
                     title: "Male-Female Composition",
-                    tickvals: Array.from({ length: sortedGroups.length }, (_, i) => i * spacingFactor),
-                    ticktext: sortedGroups,
-                    categoryorder: "array",
-                    categoryarray: sortedGroups,
+                    tickvals: xCategories.map((_, i) => i),
+                    ticktext: xCategories
                 },
                 yaxis: {
-                    title: "Grade",
+                    title: "Grade"
                 },
-                showlegend: false,
-                height: 600,
+                showlegend: true,
+                height: 400,
                 width: 800
             });
         }
@@ -208,7 +199,7 @@
                 // Create the raw data plot
                 createRawPlot(validData);
 
-                // Create the grouped plot
+                // Create the grouped plot with best-fit line
                 createGroupedPlot(validData);
             }
         });
