@@ -3,23 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hexagon Plot with Sorted Views</title>
+    <title>Hexagon Plot Sorted by Male Count</title>
     <script src="https://cdn.plot.ly/plotly-2.25.2.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
-    <h1 style="text-align: center;">Hexagon Plot</h1>
-
-    <!-- Original Plot -->
-    <div id="plot" style="width: 100%; height: 30vh;"></div>
-
-    <!-- Sorted by Male Count Plot -->
-    <h2 style="text-align: center;">Sorted by Male Count</h2>
+    <h1 style="text-align: center;">Hexagon Plot Sorted by Male Count</h1>
     <div id="sortedPlot" style="width: 100%; height: 30vh;"></div>
-
-    <!-- Sorted by Grade Plot -->
-    <h2 style="text-align: center;">Sorted by Grade</h2>
-    <div id="gradeSortedPlot" style="width: 100%; height: 30vh;"></div>
 
     <script>
         // Define colors for genders
@@ -34,17 +24,9 @@
         }
 
         // Function to create the hexagon plot
-        function createPlot(data, plotId, sorted = false, sortByGrade = false) {
-            // If sorted is true, sort the data as per the requested sort method
-            if (sorted) {
-                if (sortByGrade) {
-                    // Sort by grade (descending)
-                    data.sort((a, b) => b.GRADE - a.GRADE);
-                } else {
-                    // Sort by male count (descending)
-                    data.sort((a, b) => b.maleCount - a.maleCount);
-                }
-            }
+        function createPlot(data) {
+            // Sort by male count (descending)
+            data.sort((a, b) => b.maleCount - a.maleCount);
 
             const traces = [];
             data.forEach((row, i) => {
@@ -95,7 +77,7 @@
             });
 
             // Plot the hexagons
-            Plotly.newPlot(plotId, traces, {
+            Plotly.newPlot("sortedPlot", traces, {
                 xaxis: { visible: false },
                 yaxis: { visible: true },
                 showlegend: false,
@@ -104,7 +86,7 @@
             });
         }
 
-        // Parse the CSV and create plots
+        // Parse the CSV and create plot
         Papa.parse("Sample File HCDIV.csv", {
             download: true,
             header: true,
@@ -119,14 +101,8 @@
                     row.maleCount = members.filter(m => m === "MALE").length;
                 });
 
-                // Create the original plot
-                createPlot(validData, "plot");
-
-                // Create the sorted by male count plot
-                createPlot(validData, "sortedPlot", true);
-
-                // Create the sorted by grade plot
-                createPlot(validData, "gradeSortedPlot", true, true);
+                // Create the sorted plot
+                createPlot(validData);
             }
         });
     </script>
