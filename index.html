@@ -3,51 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Combined Hexagon Diagrams with Best Fit Line</title>
+    <title>Combined Diagrams</title>
     <script src="https://cdn.plot.ly/plotly-2.25.2.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-        }
-        #sortedPlot, #groupedPlot {
-            margin-top: 20px;
-        }
-    </style>
 </head>
 <body>
-    <h1 style="text-align: center;">Combined Hexagon Diagrams with Best Fit Line</h1>
-
-    <!-- Raw Data Diagram -->
-    <h2 style="text-align: center;">Raw Data Diagram (Sorted by Male Count)</h2>
+    <h1 style="text-align: center;">Combined Plots</h1>
     <div id="sortedPlot" style="width: 100%; height: 600px;"></div>
-
-    <!-- Grouped Scatter Plot -->
-    <h2 style="text-align: center;">Grouped Scatter Plot (Grouped by Male-Female Compositions)</h2>
     <div id="groupedPlot" style="width: 100%; height: 400px;"></div>
+    <div id="barChart" style="width: 100%; height: 400px;"></div>
 
     <script>
-        // Define colors for genders
         const genderColors = { "MALE": "blue", "FEMALE": "pink" };
 
-        // Function to calculate the best-fit line
         function calculateBestFitLine(x, y) {
             const n = x.length;
-            const meanX = x.reduce((sum, val) => sum + val, 0) / n;
-            const meanY = y.reduce((sum, val) => sum + val, 0) / n;
+            const sumX = x.reduce((a, b) => a + b, 0);
+            const sumY = y.reduce((a, b) => a + b, 0);
+            const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
+            const sumX2 = x.reduce((sum, xi) => sum + xi ** 2, 0);
 
-            const numerator = x.map((xi, i) => (xi - meanX) * (y[i] - meanY)).reduce((sum, val) => sum + val, 0);
-            const denominator = x.map(xi => (xi - meanX) ** 2).reduce((sum, val) => sum + val, 0);
-
-            const slope = numerator / denominator;
-            const intercept = meanY - slope * meanX;
+            const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX ** 2);
+            const intercept = (sumY - slope * sumX) / n;
 
             return { slope, intercept };
         }
 
-        // Function to create the raw data plot
-        function createRawPlot(data) {
+        function createBarChart(data) {
+            const compositionGroups = {};
+
+            // Group data by composition and calculate averages
+            data.forEach(row => {
+                const maleCount = row.maleCount;
+                const femaleCount = 6 - maleCount;
+                const group = `${maleCount} Males, ${femaleCount} Females`;
+
+                if (!compositionGroups[group]) {
+                    compositionGroups[group] = [];
+                }
+                compositionGroups[group].push(parseFloat(row["GRADE"]));
+            });
+
+            const xCategories = Object.keys(compositionGroups);
+            const avgGrades = xCategories.map(group => {
+                const grades = compositionGroups[group];
+                const avg = grades.reduce((a, b) => a + b, 0) / grades.length;
+                return avg;
+            });
+
+            const trace = {
+                x: xCategories,
+                y: avgGrades,
+                type: "bar",
+                marker: { color: "orange" },
+                text: avgGrades.map(avg => avg.toFixed(2)),
+                textposition: "auto",
+                hoverinfo: "x+y"
+            };
+
+            Plotly.newPlot("barChart", [trace], {
+                xaxis: {
+                    title: "Male-Female Composition",
+                },
+                yaxis: {
+                    title: "Average Grade",
+                },
+                showlegend: false,
+                height: 400,
+                width: 800
+            });
+        }
+
+        function createGroupedPlot(data) {
+            const compositionGroups = {};
+            const grades = [];
+            const maleCounts = [];
+            const xCategories = [];
+
+            data.forEach(row => {
+                const maleCount = row.maleCount;
+                const femaleCount = 6 - maleCount;
+                const group = `${maleCount} Males, ${femaleCount} Females`;
+
+                if (!compositionGroups[group]) {
+                    compositionGroups[group] = [];
+                    xCategories.push(group);
+                }
+
+                compositionGroups[group].push(row);
+                grades.push(parseFloat(row["GRADE"]));
+                maleCounts.push(maleCount);
+            });
+
+            const traces = [];
+            let xIndex = 0;
+
+            xCategories.forEach(group => {
+                const teams = compositionGroups[group];
+                teams.forEach(row => {
+                    const grade = parseFloat(row["GRADE"]);
+                    traces.push({
+                        x: [xIndex],
+                        y: [grade],
+                        mode: "markers",
+                        marker: {
+                            size: 10,
+                            color: "purple"
+                        },
+                        text: `Grade: ${grade}<br>${group}`,
+                        hoverinfo: "text"
+                    });
+                });
+                xIndex++;
+            });
+
+            const { slope, intercept } = calculateBestFitLine(maleCounts, grades);
+            const fitLineX = [0, 6];
+            const fitLineY = fitLineX.map(x => slope * x + intercept);
+            const equation = `y = ${slope.toFixed(2)}x + ${intercept.toFixed(2)}`;
+
+            traces.push({
+                x: fitLineX,
+                y: fitLineY,
+                mode: "lines",
+                line: { color: "red", dash: "dash" },
+                text: [equation, equation],
+                hoverinfo: "text"
+            });
+
+            Plotly.newPlot("groupedPlot", traces, {
+                xaxis: {
+                    title: "Male-Female Composition",
+                    tickvals: xCategories.map((_, i) => i),
+                    ticktext: xCategories
+                },
+                yaxis: {
+                    title: "Grade"
+                },
+                showlegend: false,
+                height: 400,
+                width: 800
+            });
+        }
+
+        function createSortedPlot(data) {
             data.sort((a, b) => b.maleCount - a.maleCount);
 
             const traces = [];
@@ -102,87 +201,10 @@
                 yaxis: { visible: true },
                 showlegend: false,
                 height: 600,
-                width: 2500
+                width: 1200
             });
         }
 
-        // Function to create the grouped plot
-       function createGroupedPlot(data) {
-    const compositionGroups = {};
-    const grades = [];
-    const maleCounts = [];
-    const xCategories = [];
-
-    data.forEach(row => {
-        const maleCount = row.maleCount;
-        const femaleCount = 6 - maleCount;
-        const group = `${maleCount} Males, ${femaleCount} Females`;
-
-        if (!compositionGroups[group]) {
-            compositionGroups[group] = [];
-            xCategories.push(group);
-        }
-
-        compositionGroups[group].push(row);
-        grades.push(parseFloat(row["GRADE"]));
-        maleCounts.push(maleCount);
-    });
-
-    const traces = [];
-    let xIndex = 0;
-
-    xCategories.forEach(group => {
-        const teams = compositionGroups[group];
-        teams.forEach(row => {
-            const grade = parseFloat(row["GRADE"]);
-            traces.push({
-                x: [xIndex],
-                y: [grade],
-                mode: "markers",
-                marker: {
-                    size: 10,
-                    color: "purple"
-                },
-                text: `Grade: ${grade}<br>${group}`,
-                hoverinfo: "text"
-            });
-        });
-        xIndex++;
-    });
-
-    // Calculate best fit line
-    const { slope, intercept } = calculateBestFitLine(maleCounts, grades);
-    const fitLineX = [0, 6];
-    const fitLineY = fitLineX.map(x => slope * x + intercept);
-    const equation = `y = ${slope.toFixed(2)}x + ${intercept.toFixed(2)}`;
-
-    // Add best-fit line to the plot with hover-enabled equation
-    traces.push({
-        x: fitLineX,
-        y: fitLineY,
-        mode: "lines",
-        line: { color: "red", dash: "dash" },
-        text: [equation, equation], // Hover text repeated for both points on the line
-        hoverinfo: "text"
-    });
-
-    Plotly.newPlot("groupedPlot", traces, {
-        xaxis: {
-            title: "Male-Female Composition",
-            tickvals: xCategories.map((_, i) => i),
-            ticktext: xCategories
-        },
-        yaxis: {
-            title: "Grade"
-        },
-        showlegend: false, // Hide the legend entirely
-        height: 400,
-        width: 800
-    });
-}
-
-
-        // Parse the CSV and create both plots
         Papa.parse("Sample File HCDIV.csv", {
             download: true,
             header: true,
@@ -197,11 +219,9 @@
                     row.maleCount = members.filter(m => m === "MALE").length;
                 });
 
-                // Create the raw data plot
-                createRawPlot(validData);
-
-                // Create the grouped plot with best-fit line
+                createSortedPlot(validData);
                 createGroupedPlot(validData);
+                createBarChart(validData);
             }
         });
     </script>
