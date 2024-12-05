@@ -107,79 +107,80 @@
         }
 
         // Function to create the grouped plot
-        function createGroupedPlot(data) {
-            const compositionGroups = {};
-            const grades = [];
-            const maleCounts = [];
-            const xCategories = [];
+       function createGroupedPlot(data) {
+    const compositionGroups = {};
+    const grades = [];
+    const maleCounts = [];
+    const xCategories = [];
 
-            data.forEach(row => {
-                const maleCount = row.maleCount;
-                const femaleCount = 6 - maleCount;
-                const group = `${maleCount} Males, ${femaleCount} Females`;
+    data.forEach(row => {
+        const maleCount = row.maleCount;
+        const femaleCount = 6 - maleCount;
+        const group = `${maleCount} Males, ${femaleCount} Females`;
 
-                if (!compositionGroups[group]) {
-                    compositionGroups[group] = [];
-                    xCategories.push(group);
-                }
-
-                compositionGroups[group].push(row);
-                grades.push(parseFloat(row["GRADE"]));
-                maleCounts.push(maleCount);
-            });
-
-            const traces = [];
-            let xIndex = 0;
-
-            xCategories.forEach(group => {
-                const teams = compositionGroups[group];
-                teams.forEach(row => {
-                    const grade = parseFloat(row["GRADE"]);
-                    traces.push({
-                        x: [xIndex],
-                        y: [grade],
-                        mode: "markers",
-                        marker: {
-                            size: 10,
-                            color: "purple"
-                        },
-                        text: `Grade: ${grade}<br>${group}`,
-                        hoverinfo: "text"
-                    });
-                });
-                xIndex++;
-            });
-
-            // Calculate best fit line
-            const { slope, intercept } = calculateBestFitLine(maleCounts, grades);
-            const fitLineX = [0, 6];
-            const fitLineY = fitLineX.map(x => slope * x + intercept);
-            const equation = `y = ${slope.toFixed(2)}x + ${intercept.toFixed(2)}`;
-
-            // Add best-fit line to the plot
-            traces.push({
-                x: fitLineX,
-                y: fitLineY,
-                mode: "lines",
-                line: { color: "red", dash: "dash" },
-                name: `Best Fit Line (${equation})`,
-                hoverinfo: "none"
-            });
-
-            Plotly.newPlot("groupedPlot", traces, {
-                xaxis: {
-                    title: "Male-Female Composition",
-                    tickvals: xCategories.map((_, i) => i),
-                    ticktext: xCategories
-                },
-                yaxis: {
-                    title: "Grade"
-                },
-                showlegend: false,
-                height: 400,
-                width: 800
-            });
+        if (!compositionGroups[group]) {
+            compositionGroups[group] = [];
+            xCategories.push(group);
         }
+
+        compositionGroups[group].push(row);
+        grades.push(parseFloat(row["GRADE"]));
+        maleCounts.push(maleCount);
+    });
+
+    const traces = [];
+    let xIndex = 0;
+
+    xCategories.forEach(group => {
+        const teams = compositionGroups[group];
+        teams.forEach(row => {
+            const grade = parseFloat(row["GRADE"]);
+            traces.push({
+                x: [xIndex],
+                y: [grade],
+                mode: "markers",
+                marker: {
+                    size: 10,
+                    color: "purple"
+                },
+                text: `Grade: ${grade}<br>${group}`,
+                hoverinfo: "text"
+            });
+        });
+        xIndex++;
+    });
+
+    // Calculate best fit line
+    const { slope, intercept } = calculateBestFitLine(maleCounts, grades);
+    const fitLineX = [0, 6];
+    const fitLineY = fitLineX.map(x => slope * x + intercept);
+    const equation = `y = ${slope.toFixed(2)}x + ${intercept.toFixed(2)}`;
+
+    // Add best-fit line to the plot with hover-enabled equation
+    traces.push({
+        x: fitLineX,
+        y: fitLineY,
+        mode: "lines",
+        line: { color: "red", dash: "dash" },
+        text: [equation, equation], // Hover text repeated for both points on the line
+        hoverinfo: "text"
+    });
+
+    Plotly.newPlot("groupedPlot", traces, {
+        xaxis: {
+            title: "Male-Female Composition",
+            tickvals: xCategories.map((_, i) => i),
+            ticktext: xCategories
+        },
+        yaxis: {
+            title: "Grade"
+        },
+        showlegend: false, // Hide the legend entirely
+        height: 400,
+        width: 800
+    });
+}
+
 
         // Parse the CSV and create both plots
         Papa.parse("Sample File HCDIV.csv", {
