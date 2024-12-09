@@ -91,7 +91,7 @@
     <div id="sortedPlot" style="width: 100%; height: 600px;"></div>
     <h3>Scatterplot for Linear Regression Analysis</h3>
     <p style="text-align: justify;">This diagram shows a hexagon plot where each hexagon represents a team2. Teams are sorted by the number of males, with grades plotted on the y-axis.</p>
-    <div id="groupedPlot" style="width: 100%; height: 400px;"></div>
+    <div id="scatterPlot" style="width: 100%; height: 400px;"></div>
     <h3>Linechart to Visualise each Group's Average</h3>
     <p style="text-align: justify;">This diagram shows a hexagon plot where each hexagon represents a team3. Teams are sorted by the number of males, with grades plotted on the y-axis.</p>
     <div id="averageLineChart" style="width: 100%; height: 400px;"></div>
@@ -167,77 +167,108 @@
         });
     }
 
-        function createGroupedPlot(data) {
-            const compositionGroups = {};
-            const grades = [];
-            const maleCounts = [];
-            const xCategories = [];
+      function createScatterPlotWithTrendline(data) {
+        // Group teams by male-female compositions
+        const compositionGroups = {};
+        data.forEach(row => {
+            const maleCount = row.maleCount;
+            const femaleCount = 6 - maleCount;
+            const group = `${maleCount} Males, ${femaleCount} Females`;
 
-            data.forEach(row => {
-                const maleCount = row.maleCount;
-                const femaleCount = 6 - maleCount;
-                const group = `${maleCount} Males, ${femaleCount} Females`;
+            if (!compositionGroups[group]) {
+                compositionGroups[group] = [];
+            }
+            compositionGroups[group].push(row);
+        });
 
-                if (!compositionGroups[group]) {
-                    compositionGroups[group] = [];
-                    xCategories.push(group);
-                }
+        // Sort groups by male count (descending)
+        const sortedGroups = Object.keys(compositionGroups).sort((a, b) => {
+            const maleA = parseInt(a.split(" ")[0]);
+            const maleB = parseInt(b.split(" ")[0]);
+            return maleB - maleA;
+        });
 
-                compositionGroups[group].push(row);
-                grades.push(parseFloat(row["GRADE"]));
-                maleCounts.push(maleCount);
+        const xValues = [];
+        const yValues = [];
+        const textValues = [];
+        const traces = [];
+        const spacingFactor = 3; // Spacing between x-axis categories
+        let xIndex = 0;
+
+        // Collect x and y values for scatter plot
+        sortedGroups.forEach(group => {
+            const teams = compositionGroups[group];
+            teams.forEach(row => {
+                const team = row["Team"];
+                const grade = parseFloat(row["GRADE"]);
+
+                xValues.push(xIndex * spacingFactor); // Numeric representation of the group
+                yValues.push(grade);
+                textValues.push(`Team: ${team}<br>Grade: ${grade}<br>${group}`);
             });
+            xIndex += 1;
+        });
 
-            const traces = [];
-            let xIndex = 0;
+        // Create scatter plot trace
+        traces.push({
+            x: xValues,
+            y: yValues,
+            mode: "markers",
+            marker: { size: 8, color: "blue" },
+            text: textValues,
+            hoverinfo: "text"
+        });
 
-            xCategories.forEach(group => {
-                const teams = compositionGroups[group];
-                teams.forEach(row => {
-                    const grade = parseFloat(row["GRADE"]);
-                    traces.push({
-                        x: [xIndex],
-                        y: [grade],
-                        mode: "markers",
-                        marker: {
-                            size: 10,
-                            color: "purple"
-                        },
-                        text: `Grade: ${grade}<br>${group}`,
-                        hoverinfo: "text"
-                    });
-                });
-                xIndex++;
-            });
+        // Compute a polynomial regression for the trend line
+        const degree = 2; // Change this for higher-order polynomial fits
+        const regression = polynomialRegression(xValues, yValues, degree);
 
-            const { slope, intercept } = calculateBestFitLine(maleCounts, grades);
-            const fitLineX = [0, 6];
-            const fitLineY = fitLineX.map(x => slope * x + intercept);
-            const equation = `y = ${slope.toFixed(2)}x + ${intercept.toFixed(2)}`;
+        // Generate trend line points
+        const trendX = Array.from({ length: 100 }, (_, i) => i * (Math.max(...xValues) / 99));
+        const trendY = trendX.map(x => regression.predict(x));
 
-            traces.push({
-                x: fitLineX,
-                y: fitLineY,
-                mode: "lines",
-                line: { color: "red", dash: "dash" },
-                text: [equation, equation],
-                hoverinfo: "text"
-            });
+        // Add trend line trace
+        traces.push({
+            x: trendX,
+            y: trendY,
+            mode: "lines",
+            line: { color: "red", width: 2 },
+            hoverinfo: "text",
+            text: `Trendline Equation: y = ${regression.equation}`
+        });
 
-            Plotly.newPlot("groupedPlot", traces, {
-                xaxis: {
-                    title: "Male-Female Composition",
-                    tickvals: xCategories.map((_, i) => i),
-                    ticktext: xCategories
-                },
-                yaxis: {
-                    title: "Grade"
-                },
-                showlegend: false,
-                height: 400,
-                width: 800
-            });
-        }
+        // Create the plot
+        Plotly.newPlot("scatterPlot", traces, {
+            title: "Scatter Plot with Best Fit Trendline",
+            xaxis: {
+                title: "Male-Female Composition",
+                tickvals: Array.from({ length: sortedGroups.length }, (_, i) => i * spacingFactor),
+                ticktext: sortedGroups,
+                automargin: true
+            },
+            yaxis: { title: "Grade" },
+            height: 400,
+            width: 800
+        });
+    }
+
+    // Polynomial regression function
+    function polynomialRegression(x, y, degree) {
+        // Generate polynomial terms
+        const X = x.map(xi => Array.from({ length: degree + 1 }, (_, j) => Math.pow(xi, j)));
+        const XT = math.transpose(X);
+        const Y = math.matrix(y);
+
+        // Solve for coefficients using (X^T * X)^-1 * X^T * Y
+        const beta = math.multiply(math.inv(math.multiply(XT, X)), math.multiply(XT, Y));
+        const coefficients = beta.toArray();
+
+        return {
+            coefficients,
+            predict: xi => coefficients.reduce((sum, coeff, j) => sum + coeff * Math.pow(xi, j), 0),
+            equation: coefficients.map((coeff, i) => `${coeff.toFixed(2)}x^${i}`).join(" + ")
+        };
+    }
 
         function createSortedPlot(data) {
             data.sort((a, b) => b.maleCount - a.maleCount);
@@ -313,7 +344,7 @@
                 });
 
                 createSortedPlot(validData);
-                createGroupedPlot(validData);
+                createScatterPlotWithTrendline(validData);
                 createLineChart(validData);
             }
         });
