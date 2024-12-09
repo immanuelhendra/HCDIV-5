@@ -94,7 +94,7 @@
     <div id="groupedPlot" style="width: 100%; height: 400px;"></div>
     <h3>Linechart to Visualise each Group's Average</h3>
     <p style="text-align: justify;">This diagram shows a hexagon plot where each hexagon represents a team3. Teams are sorted by the number of males, with grades plotted on the y-axis.</p>
-    <div id="barChart" style="width: 100%; height: 400px;"></div>
+    <div id="averageLineChart" style="width: 100%; height: 400px;"></div>
 
     <script>
         const genderColors = { "MALE": "blue", "FEMALE": "pink" };
@@ -112,50 +112,60 @@
             return { slope, intercept };
         }
 
-        function createBarChart(data) {
-            const compositionGroups = {};
+       function createLineChart(data) {
+        // Group data by male-female composition and calculate averages
+        const compositionAverages = {};
+        data.forEach(row => {
+            const maleCount = row.maleCount;
+            const femaleCount = 6 - maleCount;
+            const group = `${maleCount} Males, ${femaleCount} Females`;
 
-            // Group data by composition and calculate averages
-            data.forEach(row => {
-                const maleCount = row.maleCount;
-                const femaleCount = 6 - maleCount;
-                const group = `${maleCount} Males, ${femaleCount} Females`;
+            if (!compositionAverages[group]) {
+                compositionAverages[group] = { total: 0, count: 0 };
+            }
+            compositionAverages[group].total += parseFloat(row["GRADE"]);
+            compositionAverages[group].count += 1;
+        });
 
-                if (!compositionGroups[group]) {
-                    compositionGroups[group] = [];
-                }
-                compositionGroups[group].push(parseFloat(row["GRADE"]));
+        // Prepare x and y values for the line chart
+        const xValues = [];
+        const yValues = [];
+        Object.keys(compositionAverages)
+            .sort((a, b) => {
+                const maleA = parseInt(a.split(" ")[0]);
+                const maleB = parseInt(b.split(" ")[0]);
+                return maleB - maleA; // Sort descending by male count
+            })
+            .forEach(group => {
+                xValues.push(group);
+                yValues.push(compositionAverages[group].total / compositionAverages[group].count);
             });
 
-            const xCategories = Object.keys(compositionGroups);
-            const avgGrades = xCategories.map(group => {
-                const grades = compositionGroups[group];
-                const avg = grades.reduce((a, b) => a + b, 0) / grades.length;
-                return avg;
-            });
-
-            const trace = {
-                x: xCategories,
-                y: avgGrades,
-                type: "bar",
-                marker: { color: "orange" },
-                text: avgGrades.map(avg => avg.toFixed(2)),
-                textposition: "auto",
-                hoverinfo: "x+y"
-            };
-
-            Plotly.newPlot("barChart", [trace], {
-                xaxis: {
-                    title: "Male-Female Composition",
-                },
-                yaxis: {
-                    title: "Average Grade",
-                },
-                showlegend: false,
-                height: 800,
-                width: 800
-            });
-        }
+        // Create the line chart
+        Plotly.newPlot("averageLineChart", [
+            {
+                x: xValues,
+                y: yValues,
+                mode: "lines+markers",
+                line: { shape: "spline", color: "blue", width: 2 },
+                marker: { size: 8, color: "blue" },
+                text: yValues.map(avg => `Average: ${avg.toFixed(2)}`),
+                hoverinfo: "x+text"
+            }
+        ], {
+            title: "Average Grades by Team Composition",
+            xaxis: {
+                title: "Team Composition",
+                automargin: true
+            },
+            yaxis: {
+                title: "Average Grade",
+                rangemode: "tozero"
+            },
+            height: 400,
+            width: 800
+        });
+    }
 
         function createGroupedPlot(data) {
             const compositionGroups = {};
