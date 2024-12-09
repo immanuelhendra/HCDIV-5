@@ -6,11 +6,12 @@
     <title>Combined Diagrams</title>
     <script src="https://cdn.plot.ly/plotly-2.25.2.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
 </head>
 <body>
     <h1 style="text-align: center;">Combined Plots</h1>
     <p style="text-align: justify;">This diagram shows a hexagon plot where each hexagon represents a team. Teams are sorted by the number of males, with grades plotted on the y-axis.</p>
-    
+
     <!-- Table 1: Raw Data -->
     <h3>Raw Data</h3>
     <table border="1" style="width: 80%; border-collapse: collapse; text-align: center; margin-bottom: 20px;">
@@ -37,14 +38,10 @@
                 <td>Male</td>
                 <td>85</td>
             </tr>
-            <tr>
-                <td>...</td>
-                <td>...</td>
-                <td>....</td>
-            </tr>
+            <!-- Add more rows as needed -->
         </tbody>
     </table>
-    
+
     <!-- Table 2: Cleaned Data -->
     <h3>Cleaned Data</h3>
     <table border="1" style="width: 80%; border-collapse: collapse; text-align: center; margin-bottom: 20px;">
@@ -81,34 +78,42 @@
                 <td>...</td>
                 <td>...</td>
             </tr>
+            <!-- Add more rows as needed -->
         </tbody>
     </table>
+
+    <!-- Diagram 1: Hexagon Plot -->
     <h3>Scatterplot with Team Compositions using Hexbin Visualisation</h3>
-    <p style="text-align: justify;">This diagram shows a hexagon plot where each hexagon represents a team. Teams are sorted by the number of males, with grades plotted on the y-axis.</p>
     <div id="sortedPlot" style="width: 100%; height: 600px;"></div>
+
+    <!-- Diagram 2: Scatterplot with Polynomial Regression -->
     <h3>Scatterplot for Polynomial Regression Analysis</h3>
-    <p style="text-align: justify;">This diagram shows a scatter plot with a polynomial regression trendline for the teams based on gender composition and grades.</p>
     <div id="scatterPlot" style="width: 100%; height: 400px;"></div>
+
+    <!-- Diagram 3: Linechart for Average Grades -->
     <h3>Linechart to Visualise each Group's Average</h3>
-    <p style="text-align: justify;">This diagram shows a line chart for the average grades by team composition (male and female members).</p>
     <div id="averageLineChart" style="width: 100%; height: 400px;"></div>
 
     <script>
         const genderColors = { "MALE": "blue", "FEMALE": "pink" };
 
-        function calculateBestFitLine(x, y) {
-            const n = x.length;
-            const sumX = x.reduce((a, b) => a + b, 0);
-            const sumY = y.reduce((a, b) => a + b, 0);
-            const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
-            const sumX2 = x.reduce((sum, xi) => sum + xi ** 2, 0);
+        // Polynomial regression function
+        function polynomialRegression(x, y, degree) {
+            const X = x.map(xi => Array.from({ length: degree + 1 }, (_, j) => Math.pow(xi, j)));
+            const XT = math.transpose(X);
+            const Y = math.matrix(y);
 
-            const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX ** 2);
-            const intercept = (sumY - slope * sumX) / n;
+            const beta = math.multiply(math.inv(math.multiply(XT, X)), math.multiply(XT, Y));
+            const coefficients = beta.toArray();
 
-            return { slope, intercept };
+            return {
+                coefficients,
+                predict: xi => coefficients.reduce((sum, coeff, j) => sum + coeff * Math.pow(xi, j), 0),
+                equation: coefficients.map((coeff, i) => `${coeff.toFixed(2)}x^${i}`).join(" + ")
+            };
         }
 
+        // Create line chart for average grades
         function createLineChart(data) {
             const compositionAverages = {};
             data.forEach(row => {
@@ -129,7 +134,7 @@
                 .sort((a, b) => {
                     const maleA = parseInt(a.split(" ")[0]);
                     const maleB = parseInt(b.split(" ")[0]);
-                    return maleB - maleA;
+                    return maleB - maleA; 
                 })
                 .forEach(group => {
                     xValues.push(group);
@@ -148,19 +153,14 @@
                 }
             ], {
                 title: "Average Grades by Team Composition",
-                xaxis: {
-                    title: "Team Composition",
-                    automargin: true
-                },
-                yaxis: {
-                    title: "Average Grade",
-                    rangemode: "tozero"
-                },
+                xaxis: { title: "Team Composition", automargin: true },
+                yaxis: { title: "Average Grade", rangemode: "tozero" },
                 height: 400,
                 width: 800
             });
         }
 
+        // Create scatter plot with polynomial regression
         function createScatterPlotWithTrendline(data) {
             const compositionGroups = {};
             data.forEach(row => {
@@ -224,7 +224,7 @@
             });
 
             Plotly.newPlot("scatterPlot", traces, {
-                title: "Scatter Plot with Best Fit Trendline",
+                title: "Scatter Plot with Polynomial Regression",
                 xaxis: {
                     title: "Male-Female Composition",
                     tickvals: Array.from({ length: sortedGroups.length }, (_, i) => i * spacingFactor),
@@ -237,20 +237,7 @@
             });
         }
 
-        function polynomialRegression(x, y, degree) {
-            const X = x.map(xi => Array.from({ length: degree + 1 }, (_, j) => Math.pow(xi, j)));
-            const XT = math.transpose(X);
-            const Y = math.matrix(y);
-            const beta = math.multiply(math.inv(math.multiply(XT, X)), math.multiply(XT, Y));
-            const coefficients = beta.toArray();
-
-            return {
-                coefficients,
-                predict: xi => coefficients.reduce((sum, coeff, j) => sum + coeff * Math.pow(xi, j), 0),
-                equation: coefficients.map((coeff, i) => `${coeff.toFixed(2)}x^${i}`).join(" + ")
-            };
-        }
-
+        // Create hexagon plot for sorted teams
         function createSortedPlot(data) {
             data.sort((a, b) => b.maleCount - a.maleCount);
 
@@ -271,8 +258,20 @@
                 for (let j = 0; j < 6; j++) {
                     const angle = j * (2 * Math.PI / 6);
                     const nextAngle = (j + 1) * (2 * Math.PI / 6);
-                    const xCoords = [xCenter, xCenter + hexSize * Math.cos(angle), xCenter + hexSize * Math.cos(nextAngle), xCenter];
-                    const yCoords = [yCenter, yCenter + hexSize * Math.sin(angle), yCenter + hexSize * Math.sin(nextAngle), yCenter];
+
+                    const xCoords = [
+                        xCenter,
+                        xCenter + hexSize * Math.cos(angle),
+                        xCenter + hexSize * Math.cos(nextAngle),
+                        xCenter
+                    ];
+                    const yCoords = [
+                        yCenter,
+                        yCenter + hexSize * Math.sin(angle),
+                        yCenter + hexSize * Math.sin(nextAngle),
+                        yCenter
+                    ];
+
                     const color = j < maleCount ? genderColors["MALE"] : genderColors["FEMALE"];
 
                     traces.push({
@@ -288,35 +287,10 @@
                 }
             });
 
-            // Add male/female legend
-            traces.push({
-                x: [null],
-                y: [null],
-                type: 'scatter',
-                mode: 'markers',
-                marker: { color: "blue", size: 10 },
-                name: 'Male',
-                showlegend: true,
-                legendgroup: "gender",
-                legendgrouptitle: { text: 'Gender' },
-            });
-            traces.push({
-                x: [null],
-                y: [null],
-                type: 'scatter',
-                mode: 'markers',
-                marker: { color: "pink", size: 10 },
-                name: 'Female',
-                showlegend: true,
-                legendgroup: "gender",
-            });
-
             Plotly.newPlot("sortedPlot", traces, {
-                title: "Sorted Team Hexagon Plot",
                 xaxis: { visible: false },
                 yaxis: { visible: true },
-                showlegend: true,
-                legend: { x: 0.05, y: 1.05 },
+                showlegend: false,
                 height: 600,
                 width: 2000
             });
