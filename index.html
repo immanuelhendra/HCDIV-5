@@ -12,7 +12,7 @@
     <h1 style="text-align: center;">Exploring the Correlation Between Teams' Compositions (Gender) and Teams' Performance in a Design Project</h1>
     <h3>Abstract</h3>
     <p style="text-align: justify;">Design is a collaborative effort. Design projects are commonly carried out in teams, especially at the undergraduate level, to help students navigate the complexities of real-world challenges more effectively. Teamwork improves learning outcomes by providing opportunities for cross-learning and broadening students' problem-solving strategies throughout the design process. Successful teamwork requires effective cooperation, which is facilitated by clear communication and decision-making. These aspects are influenced by understanding and managing personal differences in working styles and approaches. </p>
-    <p style="text-align: justify;">The research seeks to explore the relationship between "Gender," a key factor contributing to differences within a team, and the team's performance, measured by grades. The raw data undergoes a cleaning process before any visualizations are created. This cleaning involves removing students who are not part of any team and restructuring the data format to facilitate the visualization process.</p>
+    <p style="text-align: justify;">The research is conducted in SUTD with the "Introduction to Design" course. The students in the course are split into groups of 6. The research seeks to explore the relationship between "Gender," a key factor contributing to differences within a team, and the team's performance, measured by grades. The raw data undergoes a cleaning process before any visualizations are created. This cleaning involves removing students who are not part of any team and restructuring the data format to facilitate the visualization process.</p>
     <!-- Table 1: Raw Data -->
     <h5>Raw Data</h5>
     <table border="1" style="width: 80%; border-collapse: collapse; text-align: center; margin-bottom: 20px;">
@@ -90,15 +90,21 @@
 
     <!-- Diagram 1: Hexagon Plot -->
     <h3>Scatterplot with Team Compositions using Hexbin Visualisation</h3>
+    <p> The diagram below aims to give a quick visualisation of the "forest" of the data obtained. The graph highlights team compositions using hexagons, where the distribution of male and female members within each team is visually represented by colors (blue for males, pink for females), and grades are plotted along the y-axis. </p>
     <div id="sortedPlot" style="width: 100%; height: 600px;"></div>
 
     <!-- Diagram 2: Scatterplot with Polynomial Regression -->
-    <h3>Scatterplot for Polynomial Regression Analysis</h3>
+    <h3>Scatterplot with Best-Fit Line Analysis</h3>
+    <p>The second graph investigates the correlation between team composition and grades, illustrating a scatterplot with a polynomial trendline that suggests a non-linear relationship between gender balance and team performance. In this case, the best fit line has the equation y=76+1.6x-0.1(x^2). The best fit line shows the best performing team have a mix composition between males and females.</p>
     <div id="scatterPlot" style="width: 100%; height: 400px;"></div>
 
     <!-- Diagram 3: Linechart for Average Grades -->
     <h3>Linechart to Visualise each Group's Average</h3>
+    <p>The third graph presents a line chart of average grades based on team composition, revealing performance trends across varying male-to-female ratios. Based on the diagram, the best performing team has a mix of 3 males and 3 females.</p>
     <div id="averageLineChart" style="width: 100%; height: 400px;"></div>
+
+    <h3>Conclusion</h3>
+    <p>The data visualizations reveal trends in how team composition, particularly gender balance, may influence academic performance. While some relationships and patterns are evident, the study has limitations. The analysis relies on grades as a singular measure of performance, which may not fully capture team dynamics or other qualitative factors like creativity, collaboration, or leadership. Additionally, external variables such as individual skill levels, task complexity, or external support were not considered, which could influence outcomes. Future research could incorporate these variables to provide a more comprehensive understanding of team performance.</p>
 
     <script>
         const genderColors = { "MALE": "blue", "FEMALE": "pink" };
