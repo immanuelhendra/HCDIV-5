@@ -75,6 +75,16 @@
                 <td>85</td>
             </tr>
             <tr>
+                <td>2</td>
+                <td>Female</td>
+                <td>Female</td>
+                <td>Female</td>
+                <td>Male</td>
+                <td>Female</td>
+                <td>Male</td>
+                <td>79</td>
+            </tr>
+            <tr>
                 <td>...</td>
                 <td>...</td>
                 <td>...</td>
@@ -90,21 +100,21 @@
 
     <!-- Diagram 1: Hexagon Plot -->
     <h3>Scatterplot with Team Compositions using Hexbin Visualisation</h3>
-    <p> The diagram below aims to give a quick visualisation of the "forest" of the data obtained. The graph highlights team compositions using hexagons, where the distribution of male and female members within each team is visually represented by colors (blue for males, pink for females), and grades are plotted along the y-axis. </p>
+    <p style="text-align: justify;"> The diagram below aims to give a quick visualisation of the "forest" of the data obtained. The graph highlights team compositions using hexagons, where the distribution of male and female members within each team is visually represented by colors (blue for males, pink for females), and grades are plotted along the y-axis. </p>
     <div id="sortedPlot" style="width: 100%; height: 600px;"></div>
 
     <!-- Diagram 2: Scatterplot with Polynomial Regression -->
     <h3>Scatterplot with Best-Fit Line Analysis</h3>
-    <p>The second graph investigates the correlation between team composition and grades, illustrating a scatterplot with a polynomial trendline that suggests a non-linear relationship between gender balance and team performance. In this case, the best fit line has the equation y=76+1.6x-0.1(x^2). The best fit line shows the best performing team have a mix composition between males and females.</p>
+    <p style="text-align: justify;">The second graph investigates the correlation between team composition and grades, illustrating a scatterplot with a polynomial trendline that suggests a non-linear relationship between gender balance and team performance. In this case, the best fit line has the equation y=76+1.6x-0.1(x^2). The best fit line shows the best performing team have a mix composition between males and females.</p>
     <div id="scatterPlot" style="width: 100%; height: 400px;"></div>
 
     <!-- Diagram 3: Linechart for Average Grades -->
     <h3>Linechart to Visualise each Group's Average</h3>
-    <p>The third graph presents a line chart of average grades based on team composition, revealing performance trends across varying male-to-female ratios. Based on the diagram, the best performing team has a mix of 3 males and 3 females.</p>
+    <p style="text-align: justify;">The third graph presents a line chart of average grades based on team composition, revealing performance trends across varying male-to-female ratios. Based on the diagram, the best performing team has a mix of 3 males and 3 females.</p>
     <div id="averageLineChart" style="width: 100%; height: 400px;"></div>
 
     <h3>Conclusion</h3>
-    <p>The data visualizations reveal trends in how team composition, particularly gender balance, may influence academic performance. While some relationships and patterns are evident, the study has limitations. The analysis relies on grades as a singular measure of performance, which may not fully capture team dynamics or other qualitative factors like creativity, collaboration, or leadership. Additionally, external variables such as individual skill levels, task complexity, or external support were not considered, which could influence outcomes. Future research could incorporate these variables to provide a more comprehensive understanding of team performance.</p>
+    <p style="text-align: justify;">The data visualizations reveal trends in how team composition, particularly gender balance, may influence academic performance. While some relationships and patterns are evident, the study has limitations. The analysis relies on grades as a singular measure of performance, which may not fully capture team dynamics or other qualitative factors like creativity, collaboration, or leadership. Additionally, external variables such as individual skill levels, task complexity, or external support were not considered, which could influence outcomes. Future research could incorporate these variables to provide a more comprehensive understanding of team performance.</p>
 
     <script>
         const genderColors = { "MALE": "blue", "FEMALE": "pink" };
