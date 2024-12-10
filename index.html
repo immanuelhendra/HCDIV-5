@@ -137,50 +137,66 @@
 
         // Create line chart for average grades
         function createLineChart(data) {
-            const compositionAverages = {};
-            data.forEach(row => {
-                const maleCount = row.maleCount;
-                const femaleCount = 6 - maleCount;
-                const group = `${maleCount} Males, ${femaleCount} Females`;
+    const compositionStats = {};
+    data.forEach(row => {
+        const maleCount = row.maleCount;
+        const femaleCount = 6 - maleCount;
+        const group = `${maleCount} Males, ${femaleCount} Females`;
 
-                if (!compositionAverages[group]) {
-                    compositionAverages[group] = { total: 0, count: 0 };
-                }
-                compositionAverages[group].total += parseFloat(row["GRADE"]);
-                compositionAverages[group].count += 1;
-            });
-
-            const xValues = [];
-            const yValues = [];
-            Object.keys(compositionAverages)
-                .sort((a, b) => {
-                    const maleA = parseInt(a.split(" ")[0]);
-                    const maleB = parseInt(b.split(" ")[0]);
-                    return maleB - maleA; 
-                })
-                .forEach(group => {
-                    xValues.push(group);
-                    yValues.push(compositionAverages[group].total / compositionAverages[group].count);
-                });
-
-            Plotly.newPlot("averageLineChart", [
-                {
-                    x: xValues,
-                    y: yValues,
-                    mode: "lines+markers",
-                    line: { shape: "spline", color: "blue", width: 2 },
-                    marker: { size: 8, color: "blue" },
-                    text: yValues.map(avg => `Average: ${avg.toFixed(2)}`),
-                    hoverinfo: "x+text"
-                }
-            ], {
-                title: "Average Grades by Team Composition",
-                xaxis: { title: "Team Composition", automargin: true },
-                yaxis: { title: "Average Grade", rangemode: "tozero" },
-                height: 400,
-                width: 800
-            });
+        if (!compositionStats[group]) {
+            compositionStats[group] = { total: 0, count: 0, grades: [] };
         }
+        const grade = parseFloat(row["GRADE"]);
+        compositionStats[group].total += grade;
+        compositionStats[group].count += 1;
+        compositionStats[group].grades.push(grade);
+    });
+
+    const xValues = [];
+    const yValues = [];
+    const errorValues = [];
+    Object.keys(compositionStats)
+        .sort((a, b) => {
+            const maleA = parseInt(a.split(" ")[0]);
+            const maleB = parseInt(b.split(" ")[0]);
+            return maleB - maleA; 
+        })
+        .forEach(group => {
+            const stats = compositionStats[group];
+            const mean = stats.total / stats.count;
+            const stdDev = Math.sqrt(stats.grades.reduce((sum, grade) => sum + Math.pow(grade - mean, 2), 0) / stats.count);
+
+            xValues.push(group);
+            yValues.push(mean);
+            errorValues.push(stdDev);
+        });
+
+    Plotly.newPlot("averageLineChart", [
+        {
+            x: xValues,
+            y: yValues,
+            mode: "lines+markers",
+            line: { shape: "spline", color: "blue", width: 2 },
+            marker: { size: 8, color: "blue" },
+            error_y: {
+                type: "data",
+                array: errorValues,
+                visible: true,
+                color: "red",
+                thickness: 1.5,
+                width: 2
+            },
+            text: yValues.map((mean, i) => `Mean: ${mean.toFixed(2)}<br>SD: ${errorValues[i].toFixed(2)}`),
+            hoverinfo: "x+text"
+        }
+    ], {
+        title: "Average Grades by Team Composition with Standard Deviation",
+        xaxis: { title: "Team Composition", automargin: true },
+        yaxis: { title: "Grade", rangemode: "tozero" },
+        height: 400,
+        width: 800
+    });
+}
 
         // Create scatter plot with polynomial regression
         function createScatterPlotWithTrendline(data) {
