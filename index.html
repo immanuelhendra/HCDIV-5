@@ -110,12 +110,17 @@
 
     <!-- Diagram 3: Linechart for Average Grades -->
     <h3>Linechart to Visualise each Group's Average</h3>
-    <p style="text-align: justify;">The third graph presents a line chart of average grades based on team composition, revealing performance trends across varying male-to-female ratios. Based on the diagram, the best performing team has a mix of 3 males and 3 females.</p>
+    <p style="text-align: justify;">The third graph presents a line chart of average grades based on team composition (with standard deviations), revealing performance trends across varying male-to-female ratios. Based on the diagram, the best performing team has a mix of 3 males and 3 females.</p>
     <div id="averageLineChart" style="width: 100%; height: 400px;"></div>
 
     <h3>Conclusion</h3>
     <p style="text-align: justify;">The data visualizations reveal trends in how team composition, particularly gender balance, may influence academic performance. While some relationships and patterns are evident, the study has limitations. The analysis relies on grades as a singular measure of performance, which may not fully capture team dynamics or other qualitative factors like creativity, collaboration, or leadership. Additionally, external variables such as individual skill levels, task complexity, or external support were not considered, which could influence outcomes. Future research could incorporate these variables to provide a more comprehensive understanding of team performance. Lastly, for scientific publication purposes, the data presented needs to be substantiated with statistical analysis. </p>
-
+    <p style="text-align: justify;">For future data visualization projects, the following can be improved given more time and expertise:</p>
+    <ul style="text-align: justify;">
+    <li>Hexbin diagram is powerful in showing team compositions, the visualization can be extended to other factors such as MBTI personality types, students' pre-education, and other factors that may affect teams' performance. Readability is to be tested, especially with 16 different colors representing 16 different MBTI personality types.</li>
+    <li>The current hexbin diagram is not too meaningful as it just shows the forest. With more expertise, it would be more useful to combine the hexbin with the scatterplot. Something like the representation below:</li>
+    <li>Hexbins can be linked to other data visualizations with further interaction. For example, I wanted to be able to click on one of the male triangles, and the data of male vs female population profile or averages of male vs female. This would enhance its uses with a more complicated data set like pre-u level and MBTI personality types.</li>
+</ul>
     <script>
         const genderColors = { "MALE": "blue", "FEMALE": "pink" };
 
