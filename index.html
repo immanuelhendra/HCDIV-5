@@ -15,7 +15,7 @@
     <p style="text-align: justify;">The research is conducted in SUTD with the "Introduction to Design" course. The students in the course are split into groups of 6. The research seeks to explore the relationship between "Gender," a key factor contributing to differences within a team, and the team's performance, measured by grades. The raw data undergoes a cleaning process before any visualizations are created. This cleaning involves removing students who are not part of any team and restructuring the data format to facilitate the visualization process.</p>
     <!-- Table 1: Raw Data -->
     <h5>Raw Data</h5>
-    <table border="1" style="width: 80%; border-collapse: collapse; text-align: center; margin-bottom: 20px;">
+    <table border="1" style="width: 50%; border-collapse: collapse; text-align: center; margin-bottom: 20px;">
         <thead>
             <tr style="background-color: #f2f2f2;">
                 <th>Team</th>
@@ -101,7 +101,7 @@
     <!-- Diagram 1: Hexagon Plot -->
     <h3>Scatterplot with Team Compositions using Hexbin Visualisation</h3>
     <p style="text-align: justify;"> The diagram below aims to give a quick visualisation of the "forest" of the data obtained. The graph highlights team compositions using hexagons, where the distribution of male and female members within each team is visually represented by colors (blue for males, pink for females), and grades are plotted along the y-axis. </p>
-    <div id="sortedPlot" style="width: 100%; height: 600px;"></div>
+    <div id="sortedPlot" style="width: 100%; height: 500px;"></div>
 
     <!-- Diagram 2: Scatterplot with Polynomial Regression -->
     <h3>Scatterplot with Best-Fit Line Analysis</h3>
@@ -119,7 +119,7 @@
     <ul style="text-align: justify;">
     <li>Hexbin diagram is powerful in showing team compositions, the visualization can be extended to other factors such as MBTI personality types, students' pre-education, and other factors that may affect teams' performance. Readability is to be tested, especially with 16 different colors representing 16 different MBTI personality types.</li>
     <li>The current hexbin diagram is not too meaningful as it just shows the forest. With more expertise, it would be more useful to combine the hexbin with the scatterplot. Something like the representation below:</li>
-        <img src="hexbin sample.jpg" alt="Team Diversity Chart" style="display: block; max-width: 40%; height: auto; margin-top: 2px;">
+        <img src="hexbin sample.jpg" alt="Team Diversity Chart" style="display: block; max-width: 10%; height: auto; margin-top: 2px;">
     <li>Hexbins can be linked to other data visualizations with further interaction. For example, I wanted to be able to click on one of the male triangles, and the data of male vs female population profile or averages of male vs female. This would enhance its uses with a more complicated data set like pre-u level and MBTI personality types.</li>
 </ul>
     <script>
